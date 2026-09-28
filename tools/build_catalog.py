@@ -37,7 +37,7 @@ DEFAULT_SETTINGS = {
 FIXED_TIME = (2000, 1, 1, 0, 0, 0)  # deterministic zips -> stable versions
 
 PUBLIC_FIELDS = ("id", "name", "vendor", "year", "size", "phone", "genre", "desc",
-                 "license", "source", "keypad", "private")
+                 "license", "source", "keypad", "private", "external")
 
 
 def manifest(jar: zipfile.ZipFile) -> dict:
@@ -111,9 +111,11 @@ def main():
         if entry.get("private") and not include_private:
             print(f"skip {entry['id']} (private)")
             continue
-        built = build(entry)
+        # "external": a recommendation that links to the game's page elsewhere;
+        # nothing is bundled
+        built = {k: entry[k] for k in PUBLIC_FIELDS if k in entry} if entry.get("external") else build(entry)
         (local if entry.get("private") else games).append(built)
-        print(f"built {entry['id']} ({built['version']})")
+        print(f"built {entry['id']} ({built.get('version', 'link')})")
 
     write(OUT / "catalog.json", games)
     local_path = OUT / "catalog.local.json"

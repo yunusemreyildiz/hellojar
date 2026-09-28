@@ -230,6 +230,7 @@ a { color: var(--accent); }
 }
 
 .tip {
+    margin-top: 16px;
     display: flex;
     flex-direction: column;
     gap: 2px;

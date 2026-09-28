@@ -50,5 +50,14 @@
     "desc": "Oceanic 815 kazasından sağ kurtulanlarla adanın gizemini çöz.",
     "license": "Telifli (Gameloft). Herkese açık yayında kaldırın.",
     "private": true
+  },
+  {
+    "id": "lost-dedomil",
+    "external": "http://dedomil.net/games/278/screens",
+    "name": "LOST: The Official Game",
+    "vendor": "Gameloft",
+    "year": 2007,
+    "genre": "Macera",
+    "desc": "Oceanic 815 kazasından sağ kurtulanlarla adanın gizemini çöz. Nokia N80 için 352x416 sürümünü seç."
   }
 ]

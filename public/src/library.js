@@ -122,7 +122,9 @@ function renderLibrary() {
 // ---------- discover ----------
 
 async function renderCatalog() {
-    const games = await loadCatalog();
+    const all = await loadCatalog();
+    const games = all.filter(g => !g.external);
+    renderRecommendations(all.filter(g => g.external));
 
     $('#catalog-block').hidden = games.length === 0;
     const list = $('#catalog');
@@ -162,6 +164,40 @@ async function renderCatalog() {
         play.textContent = getGame(g.id) ? 'Devam' : 'Oyna';
 
         item.append(info, play);
+        list.appendChild(item);
+    }
+}
+
+// games we don't host: link to their page, the player adds the jar afterwards
+function renderRecommendations(games) {
+    $('#recs-block').hidden = games.length === 0;
+    const list = $('#recs');
+    list.innerHTML = '';
+
+    for (const g of games) {
+        const item = document.createElement('div');
+        item.className = 'catalog-item';
+        item.appendChild(iconEl(g, true));
+
+        const info = document.createElement('div');
+        info.className = 'info';
+        const h = document.createElement('h3');
+        h.textContent = g.name;
+        const meta = document.createElement('p');
+        meta.textContent = [g.genre, g.vendor, g.year].filter(Boolean).join(' · ');
+        const desc = document.createElement('p');
+        desc.className = 'desc';
+        desc.textContent = g.desc || '';
+        info.append(h, meta, desc);
+
+        const open = document.createElement('a');
+        open.className = 'btn';
+        open.href = g.external;
+        open.target = '_blank';
+        open.rel = 'noopener';
+        open.textContent = 'İndir';
+
+        item.append(info, open);
         list.appendChild(item);
     }
 }
