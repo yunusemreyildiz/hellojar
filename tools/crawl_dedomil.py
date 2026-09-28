@@ -25,6 +25,8 @@ import re
 import sys
 import threading
 import time
+import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -56,18 +58,32 @@ def log(*args):
 
 def fetch(path: str, binary=False, tries=4):
     url = path if path.startswith("http") else BASE + path
-    for attempt in range(tries):
+    # thumbnail paths come straight from HTML: "&amp;", spaces...
+    url = urllib.parse.quote(html.unescape(url), safe=":/?=&%")
+    attempt = 0
+    while True:
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=30) as res:
                 data = res.read()
             time.sleep(PAUSE)
             return data if binary else data.decode("utf-8", "replace")
-        except Exception as e:  # network hiccups: back off and retry
-            if attempt == tries - 1:
+        except urllib.error.HTTPError as e:  # the page itself is broken: give up on it
+            attempt += 1
+            if attempt >= tries:
                 log(f"  ! {url}: {e}")
                 return None
-            time.sleep(2 * (attempt + 1))
+            time.sleep(2 * attempt)
+        except urllib.error.URLError as e:
+            # no network (laptop asleep, wifi dropped): wait for it instead of
+            # skipping half the site
+            attempt += 1
+            if attempt % 10 == 1:
+                log(f"  … network problem ({e}), waiting")
+            time.sleep(min(60, 3 * attempt))
+        except Exception as e:  # malformed URL and the like: not worth retrying
+            log(f"  ! {url}: {e}")
+            return None
 
 
 # ---------- 1. listings ----------
