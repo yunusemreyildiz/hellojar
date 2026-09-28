@@ -525,6 +525,55 @@ async function init() {
     });
 }
 
+// ---------- diagnostics: play.html?app=…&debug=1 ----------
+// A small overlay for figuring out device-specific problems from a screenshot.
+function initDebugPanel() {
+    if (!new URLSearchParams(location.search).has('debug')) return;
+    const panel = document.createElement('pre');
+    panel.id = 'debug-panel';
+    document.body.appendChild(panel);
+
+    const stats = { queued: 0, consumed: 0, lastKey: '-', frames: 0, errors: [] };
+    const origQueue = evtQueue.queueEvent.bind(evtQueue);
+    evtQueue.queueEvent = (evt, skip) => {
+        stats.queued++;
+        if (evt.kind === 'keydown') stats.lastKey = evt.args[0] + (evtQueue.started ? '' : ' (DROPPED: listener not started)');
+        return origQueue(evt, skip);
+    };
+    const origWait = evtQueue.waitForEvent.bind(evtQueue);
+    evtQueue.waitForEvent = async () => { const e = await origWait(); stats.consumed++; return e; };
+    const origDraw = screenCtx.drawImage.bind(screenCtx);
+    screenCtx.drawImage = (...a) => { stats.frames++; return origDraw(...a); };
+    const addErr = m => { stats.errors.push(String(m).slice(0, 120)); stats.errors = stats.errors.slice(-4); };
+    window.addEventListener('error', e => addErr(e.message));
+    window.addEventListener('unhandledrejection', e => addErr(e.reason?.message || e.reason));
+    const origErr = console.error.bind(console);
+    console.error = (...a) => { addErr(a.join(' ')); origErr(...a); };
+
+    let lastFrames = 0, lastT = performance.now(), fps = 0, lagMax = 0, tick = performance.now();
+    setInterval(() => {
+        const now = performance.now();
+        lagMax = Math.max(lagMax, now - tick - 250);
+        tick = now;
+    }, 250);
+    setInterval(() => {
+        const now = performance.now();
+        fps = ((stats.frames - lastFrames) * 1000 / (now - lastT)).toFixed(1);
+        lastFrames = stats.frames; lastT = now;
+        panel.textContent = [
+            `fps ${fps}  lag ${Math.round(lagMax)}ms`,
+            `listener ${evtQueue.started ? 'started' : 'NOT started'}  queue ${evtQueue.queue.length}`,
+            `events in ${stats.queued} / out ${stats.consumed}  last key ${stats.lastKey}`,
+            `audio ${window.libmidi?.context?.state || '-'}  canvas ${display.width}x${display.height}`,
+            `${navigator.userAgent.replace(/^Mozilla\/5\.0 /, '').slice(0, 90)}`,
+            ...stats.errors.map(e => '! ' + e),
+        ].join('\n');
+        lagMax = 0;
+    }, 1000);
+}
+
+initDebugPanel();
+
 if (APP_ID) {
     init().catch(e => {
         console.error(e);
