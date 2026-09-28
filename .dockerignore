@@ -1,0 +1,9 @@
+node_modules
+.git
+game
+catalog/dedomil-cache
+catalog/archive-cache
+.netlify
+.claude
+public/apps/lost.*
+public/apps/catalog.local.json
