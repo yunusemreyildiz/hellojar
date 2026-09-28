@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+
+# games you may not redistribute (see tools/build_catalog.py --private)
+game/
+public/apps/catalog.local.json
+public/apps/lost.*

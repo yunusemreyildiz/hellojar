@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0d10">
+    <meta name="description" content="Eski tuşlu telefon (J2ME) oyunlarını tarayıcında oyna.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tuşlu">
+    <title>Tuşlu</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" href="icons/favicon.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <header class="top">
+        <img src="icons/icon-192.png" alt="" class="brand-icon">
+        <div>
+            <h1>Tuşlu</h1>
+            <p>Eski cep oyunları, tarayıcında</p>
+        </div>
+    </header>
+
+    <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="library" aria-selected="true">Kütüphanem</button>
+        <button role="tab" data-tab="discover" aria-selected="false">Keşfet</button>
+    </nav>
+
+    <main>
+        <section id="tab-library" role="tabpanel">
+            <div id="games" class="games">
+                <button class="add-card" data-action="add">
+                    <span class="plus">+</span>
+                    <b>Oyun ekle</b>
+                    <small>.jar dosyası seç</small>
+                </button>
+            </div>
+
+            <div id="empty" class="empty" hidden>
+                <h2>Kütüphanen boş</h2>
+                <p>Telefonuna indirdiğin bir <b>.jar</b> oyununu ekle ya da Keşfet'ten hazır bir oyunla başla.</p>
+                <div class="row">
+                    <button class="btn primary" data-action="add">Jar dosyası seç</button>
+                    <button class="btn" data-tab-link="discover">Oyun bul</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-discover" role="tabpanel" hidden>
+            <div id="catalog-block" hidden>
+                <h2 class="section-title">Hemen oyna</h2>
+                <p class="section-sub">Yazarlarının ücretsiz dağıttığı oyunlar. İndirmeye gerek yok, dokun ve oyna.</p>
+                <div id="catalog" class="catalog"></div>
+            </div>
+
+            <h2 class="section-title">Dedomil'de bul</h2>
+            <p class="section-sub">Binlerce eski oyun. İndirdiğin jar'ı buraya ekleyip oynarsın.</p>
+
+            <form id="search" class="search" autocomplete="off">
+                <input type="search" name="q" placeholder="Oyun adı, ör. Asphalt" maxlength="25" enterkeyhint="search" aria-label="Oyun adı">
+                <button class="btn primary" type="submit">Ara</button>
+            </form>
+
+            <div class="chips">
+                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/top/page/1">TOP 50</a>
+                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/latest">Yeni eklenenler</a>
+                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/category/1">Nokia</a>
+                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/category/2">Sony Ericsson</a>
+                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/category/4">Samsung</a>
+                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/category/3">Motorola</a>
+                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/screens">Çözünürlükler</a>
+            </div>
+
+            <div class="tip">
+                <b>Hangi sürümü indirmeli?</b>
+                <span>Ekranın için en iyi görünen boyutlar: <span id="rec-sizes">240x320</span>. Aynı oyunun birden fazla sürümü varsa bunlardan birini seç.</span>
+            </div>
+
+            <h3 class="section-title small">Nasıl eklenir?</h3>
+            <ol class="steps">
+                <li><b>Bul ve indir.</b> Dedomil'de oyunun sayfasından <b>JAR</b> dosyasını indir (JAD değil).</li>
+                <li id="step-open"><b>Tuşlu'ya ekle.</b> <span class="step-android">İndirme bitince dosyayı <b>Paylaş → Tuşlu</b> ile gönder ya da </span>Kütüphanem'de <b>Oyun ekle</b>'ye dokunup İndirilenler'den seç.</li>
+                <li><b>Oyna.</b> Ekran boyutu ve tuşlar otomatik ayarlanır; oyun kütüphanende kalır, kayıtların saklanır.</li>
+            </ol>
+            <p class="fineprint">Tuşlu oyun barındırmaz ve dedomil.net ile bağlantılı değildir; linkler dedomil'in kendi sayfalarını açar. Oyunlar cihazında kalır, hiçbir sunucuya yüklenmez.</p>
+        </section>
+    </main>
+
+    <input type="file" id="file-input" accept=".jar,application/java-archive,application/x-java-archive" hidden>
+
+    <div id="drop-hint" hidden><div>Jar dosyasını bırak</div></div>
+
+    <!-- add game -->
+    <div class="sheet-backdrop" id="add-sheet" hidden>
+        <div class="sheet" role="dialog" aria-labelledby="add-title">
+            <div class="sheet-handle"></div>
+            <div id="add-loading" class="loading">
+                <div class="spinner"></div>
+                <p id="add-loading-text">Oyun inceleniyor…</p>
+            </div>
+            <div id="add-error" class="error-box" hidden></div>
+            <div id="add-form" hidden>
+                <div class="game-head">
+                    <img id="add-icon" alt="" class="icon big">
+                    <div>
+                        <h2 id="add-title"></h2>
+                        <p id="add-meta" class="muted"></p>
+                    </div>
+                </div>
+                <label class="field">
+                    <span>Ekran boyutu <em id="add-size-badge" class="badge">algılandı</em></span>
+                    <select id="add-size"></select>
+                </label>
+                <label class="field">
+                    <span>Tuş düzeni (telefon tipi)</span>
+                    <select id="add-phone"></select>
+                </label>
+                <fieldset id="add-exists" class="field" hidden>
+                    <legend>Bu oyun zaten kütüphanende</legend>
+                    <label class="radio"><input type="radio" name="mode" value="replace" checked> Mevcut oyunu bununla değiştir <small>(kayıtlar korunur)</small></label>
+                    <label class="radio"><input type="radio" name="mode" value="new"> Ayrı bir oyun olarak ekle</label>
+                </fieldset>
+                <div class="row end">
+                    <button class="btn" data-action="close-sheet">Vazgeç</button>
+                    <button class="btn primary" id="add-confirm">Ekle ve oyna</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- manage game -->
+    <div class="sheet-backdrop" id="manage-sheet" hidden>
+        <div class="sheet" role="dialog" aria-labelledby="manage-title">
+            <div class="sheet-handle"></div>
+            <div class="game-head">
+                <img id="manage-icon" alt="" class="icon big">
+                <div>
+                    <h2 id="manage-title"></h2>
+                    <p id="manage-meta" class="muted"></p>
+                </div>
+            </div>
+            <div id="manage-loading" class="loading small">
+                <div class="spinner"></div>
+                <p>Ayarlar okunuyor…</p>
+            </div>
+            <div id="manage-form" hidden>
+                <label class="field">
+                    <span>Ekran boyutu</span>
+                    <select id="manage-size"></select>
+                </label>
+                <label class="field">
+                    <span>Tuş düzeni (telefon tipi)</span>
+                    <select id="manage-phone"></select>
+                </label>
+                <label class="field">
+                    <span>Ekrandaki tuşlar</span>
+                    <select id="manage-keypad">
+                        <option value="full">Tam tuş takımı</option>
+                        <option value="nav">Sadece yön ve seçim tuşları</option>
+                        <option value="none">Gizli (dokunmatik oyunlar)</option>
+                    </select>
+                </label>
+                <label class="switch">
+                    <input type="checkbox" id="manage-sound">
+                    <span>Ses</span>
+                </label>
+                <p class="muted small">Oyun açılmıyor ya da ekran kesik görünüyorsa önce ekran boyutunu, sonra tuş düzenini değiştir.</p>
+                <div class="row end">
+                    <button class="btn primary" id="manage-save">Kaydet</button>
+                </div>
+                <div class="danger-zone">
+                    <button class="btn ghost" id="manage-wipe">Kayıtları sil</button>
+                    <button class="btn ghost danger" id="manage-remove">Oyunu kaldır</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" role="status" aria-live="polite" hidden></div>
+
+    <script src="https://cjrtnc.leaningtech.com/20260317_2978/loader.js"></script>
+    <script type="module" src="src/library.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "games": [
+    {
+      "id": "abo",
+      "name": "Abo",
+      "vendor": "Sendon Software",
+      "year": 2015,
+      "size": "240x320",
+      "phone": "Nokia",
+      "genre": "Arcade",
+      "desc": "Klasik tuğla kırma: topu raketle karşıla, tüm blokları kır.",
+      "license": "GPL-2.0",
+      "source": "https://sourceforge.net/projects/abo/",
+      "version": "e558d3de9de1",
+      "icon": "abo.png"
+    },
+    {
+      "id": "milcity",
+      "name": "MilCity",
+      "vendor": "golflima",
+      "year": 2011,
+      "size": "240x320",
+      "phone": "Nokia",
+      "genre": "Strateji",
+      "desc": "Şehrini kur, enerji üret, silah yap; bilgisayara karşı gerçek zamanlı strateji.",
+      "license": "GPL-3.0",
+      "source": "https://sourceforge.net/projects/milcity/",
+      "version": "c56632fe626b",
+      "icon": "milcity.png"
+    },
+    {
+      "id": "reversi",
+      "name": "Reversi",
+      "vendor": "Irving Bunton Jr",
+      "year": 2009,
+      "size": "240x320",
+      "phone": "Nokia",
+      "genre": "Masa oyunu",
+      "desc": "Klasik Reversi (Othello): taşları çevir, tahtayı ele geçir.",
+      "license": "GPL-2.0",
+      "source": "https://sourceforge.net/projects/oware-midlet/",
+      "version": "9efad4474d07",
+      "icon": "reversi.png"
+    }
+  ]
+}

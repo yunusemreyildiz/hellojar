@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0d10">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tuşlu">
+    <title>Tuşlu</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" href="icons/favicon.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/play.css">
+</head>
+<body>
+    <main id="app">
+        <section id="screen-area">
+            <canvas tabindex="0" id="display" width="240" height="320"></canvas>
+            <button class="float-menu" data-action="menu" aria-label="Menü">
+                <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+            </button>
+        </section>
+
+        <section id="pad" class="keypad-part" aria-label="Tuş takımı">
+            <div class="soft-row">
+                <button class="key soft" data-key="F1" aria-label="Sol seçim tuşu"><i></i></button>
+                <button class="key menu" data-action="menu" aria-label="Menü">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                </button>
+                <button class="key soft" data-key="F2" aria-label="Sağ seçim tuşu"><i></i></button>
+            </div>
+
+            <div class="main-row">
+                <div class="dpad">
+                    <button class="key dir up" data-key="ArrowUp" aria-label="Yukarı"><b></b></button>
+                    <button class="key dir left" data-key="ArrowLeft" aria-label="Sol"><b></b></button>
+                    <button class="key ok" data-key="Enter" aria-label="Tamam"></button>
+                    <button class="key dir right" data-key="ArrowRight" aria-label="Sağ"><b></b></button>
+                    <button class="key dir down" data-key="ArrowDown" aria-label="Aşağı"><b></b></button>
+                </div>
+
+                <div class="numpad">
+                    <button class="key num" data-key="Digit1">1<small>&nbsp;</small></button>
+                    <button class="key num" data-key="Digit2">2<small>abc</small></button>
+                    <button class="key num" data-key="Digit3">3<small>def</small></button>
+                    <button class="key num" data-key="Digit4">4<small>ghi</small></button>
+                    <button class="key num" data-key="Digit5">5<small>jkl</small></button>
+                    <button class="key num" data-key="Digit6">6<small>mno</small></button>
+                    <button class="key num" data-key="Digit7">7<small>pqrs</small></button>
+                    <button class="key num" data-key="Digit8">8<small>tuv</small></button>
+                    <button class="key num" data-key="Digit9">9<small>wxyz</small></button>
+                    <button class="key num" data-key="KeyE">*<small>+</small></button>
+                    <button class="key num" data-key="Digit0">0<small>␣</small></button>
+                    <button class="key num" data-key="KeyR">#<small>⇧</small></button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="loader">
+        <img src="icons/icon-192.png" alt="" class="logo" id="loader-icon">
+        <h1 id="loader-name">Tuşlu</h1>
+        <p class="sub" id="loader-sub">&nbsp;</p>
+        <div class="bar"><span id="progress"></span></div>
+        <p id="status">Hazırlanıyor…</p>
+        <p class="hint" id="loader-hint">İlk açılış 20–40 sn sürebilir, sonrakiler daha hızlıdır.</p>
+        <a href="./" class="back" id="loader-back" hidden>Kütüphaneye dön</a>
+    </div>
+
+    <div id="menu" hidden>
+        <div class="sheet" role="dialog" aria-label="Menü">
+            <h2>Menü</h2>
+            <button data-menu="fullscreen">Tam ekran</button>
+            <button data-menu="haptics">Titreşim: <span id="haptics-state">Açık</span></button>
+            <button data-menu="keypad">Tuşlar: <span id="keypad-state">Tam</span></button>
+            <button data-menu="emu">Emülatör ayarları</button>
+            <button data-menu="reload">Oyunu yeniden başlat</button>
+            <button data-menu="library">Kütüphaneye dön</button>
+            <button data-menu="close" class="primary">Oyuna dön</button>
+        </div>
+    </div>
+
+    <script src="https://cjrtnc.leaningtech.com/20260317_2978/loader.js"></script>
+    <script type="module" src="src/play.js"></script>
+</body>
+</html>

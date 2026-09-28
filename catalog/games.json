@@ -1,0 +1,54 @@
+[
+  {
+    "id": "abo",
+    "jar": "catalog/free/Abo.jar",
+    "name": "Abo",
+    "vendor": "Sendon Software",
+    "year": 2015,
+    "size": "240x320",
+    "phone": "Nokia",
+    "genre": "Arcade",
+    "desc": "Klasik tuğla kırma: topu raketle karşıla, tüm blokları kır.",
+    "license": "GPL-2.0",
+    "source": "https://sourceforge.net/projects/abo/"
+  },
+  {
+    "id": "milcity",
+    "jar": "catalog/free/MilCity-Blue.jar",
+    "name": "MilCity",
+    "vendor": "golflima",
+    "year": 2011,
+    "size": "240x320",
+    "phone": "Nokia",
+    "genre": "Strateji",
+    "desc": "Şehrini kur, enerji üret, silah yap; bilgisayara karşı gerçek zamanlı strateji.",
+    "license": "GPL-3.0",
+    "source": "https://sourceforge.net/projects/milcity/"
+  },
+  {
+    "id": "reversi",
+    "jar": "catalog/free/Reversi-0.1.6.jar",
+    "name": "Reversi",
+    "vendor": "Irving Bunton Jr",
+    "year": 2009,
+    "size": "240x320",
+    "phone": "Nokia",
+    "genre": "Masa oyunu",
+    "desc": "Klasik Reversi (Othello): taşları çevir, tahtayı ele geçir.",
+    "license": "GPL-2.0",
+    "source": "https://sourceforge.net/projects/oware-midlet/"
+  },
+  {
+    "id": "lost",
+    "jar": "game/LOST_NokiaN80_EN_IGP_101.jar",
+    "name": "LOST",
+    "vendor": "Gameloft",
+    "year": 2007,
+    "size": "352x416",
+    "phone": "Nokia",
+    "genre": "Macera",
+    "desc": "Oceanic 815 kazasından sağ kurtulanlarla adanın gizemini çöz.",
+    "license": "Telifli (Gameloft). Herkese açık yayında kaldırın.",
+    "private": true
+  }
+]

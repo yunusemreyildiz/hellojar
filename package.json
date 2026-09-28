@@ -1,0 +1,12 @@
+{
+  "name": "hellojar",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Tuşlu: eski J2ME (Java ME) telefon oyunlarını mobil tarayıcıda oynatan platform (freej2me-web + CheerpJ).",
+  "scripts": {
+    "start": "serve -u public -l 8080"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}
