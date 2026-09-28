@@ -3,7 +3,7 @@
 import { listGames, getGame, saveGame, updateGame, removeGame, loadCatalog } from "./store.js";
 import { SCREEN_SIZES, PHONE_TYPES } from "./detect.js";
 import { initDirectory, pendingDownload, clearPending } from "./directory.js";
-import { unwrapJar, guessScreenFromJar } from "./zip.js";
+import { unwrapJar, guessScreenFromJar, guessPhoneFromJar } from "./zip.js";
 import { t, tHtml, localized, applyI18n, initLangSwitch } from "./i18n.js";
 import {
     loadEmulator, analyseJar, install, readSettings, saveSettings,
@@ -257,6 +257,12 @@ async function addFile(file, hint = null, { auto = false, archive = null } = {})
 
         pending = await analyseJar(buffer, fileName);
         pending.archive = archive;
+        if (!pending.phoneFromName) {
+            // Motorola/Siemens builds use other soft-key codes; Nokia's would be ignored
+            const vendor = await guessPhoneFromJar(buffer).catch(() => null);
+            if (vendor) pending.phone = vendor;
+        }
+        pending.phoneChecked = true;
         if (!pending.sizeDetected) {
             // nothing in the name or manifest: look at the game's artwork
             const guess = await guessScreenFromJar(buffer).catch(() => null);
@@ -332,6 +338,7 @@ function libraryEntry(id, p, size, phone, previous) {
         fileName: p.fileName,
         dedomilId: p.dedomilId || previous?.dedomilId || null,
         archive: p.archive || previous?.archive || null,
+        phoneChecked: true,
         source: 'user',
         addedAt: previous?.addedAt || Date.now(),
     };

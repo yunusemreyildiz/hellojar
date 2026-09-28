@@ -105,6 +105,7 @@ export async function analyseJar(buffer, fileName) {
         size: size || '240x320',
         sizeDetected: !!size,
         phone,
+        phoneFromName: !!guess.phone,
         exists: await isInstalled(appId),
     };
 }

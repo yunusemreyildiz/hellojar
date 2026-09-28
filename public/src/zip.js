@@ -115,3 +115,51 @@ export async function guessScreenFromJar(buffer) {
     }
     return primary;
 }
+
+// ---------- which phone's key codes a game expects ----------
+
+const int32 = (b, i) => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]);
+
+// Lowest cases of the game's key-handling switches: a switch whose cases run
+// from negative (soft/navigation) codes up to the digit keys '1'/'2' (49/50).
+function keySwitchLows(b, out) {
+    const n = b.length;
+    for (let i = 4; i + 8 <= n; i++) {
+        // tableswitch: default offset, low, high
+        const low = int32(b, i);
+        if (low >= -70 && low <= -1) {
+            const high = int32(b, i + 4);
+            const def = int32(b, i - 4);
+            if (high >= 49 && high <= 60 && def > 0 && def < 65536) out.add(low);
+        }
+        // lookupswitch: sorted (key, offset) pairs; find 49 followed by 50
+        if (b[i] === 0 && b[i + 1] === 0 && b[i + 2] === 0 && b[i + 3] === 49 &&
+            i + 12 <= n && int32(b, i + 8) === 50) {
+            let prev = 49;
+            for (let j = i - 8; j >= 0; j -= 8) {
+                const k = int32(b, j);
+                if (k >= prev || k < -300) break;
+                if (k < 0) out.add(k);
+                prev = k;
+            }
+        }
+    }
+}
+
+/**
+ * 'Motorola' or 'Siemens' when the game's key tables use that vendor's soft-key
+ * codes (and not Nokia's -6/-7); null otherwise (Nokia/Sony Ericsson layout).
+ */
+export async function guessPhoneFromJar(buffer) {
+    const keys = new Set();
+    for (const e of listEntries(buffer)) {
+        if (!/\.class$/i.test(e.name)) continue;
+        try {
+            keySwitchLows(new Uint8Array(await extract(buffer, e)), keys);
+        } catch {}
+    }
+    const nokia = keys.has(-6) || keys.has(-7);
+    if (!nokia && (keys.has(-21) || keys.has(-22))) return 'Motorola';
+    if (!nokia && [-59, -60, -61, -62].some(k => keys.has(k))) return 'Siemens';
+    return null;
+}

@@ -15,7 +15,7 @@ import midiBridgeNatives from "../libjs/libmidibridge.js";
 
 import { getGame, saveGame, updateGame, removeGame, loadCatalog } from "./store.js";
 import { TOUCH_SIZES, useEmulator, analyseJar, install } from "./emu.js";
-import { unwrapJar } from "./zip.js";
+import { unwrapJar, guessPhoneFromJar } from "./zip.js";
 import { t, getLang, setLang, applyI18n } from "./i18n.js";
 
 const APP_ID = new URLSearchParams(location.search).get('app');
@@ -136,9 +136,40 @@ function autoscale() {
 
 // ---------- input ----------
 
-function postKey(isDown, code) {
+function sendKey(isDown, code) {
     const symbol = code.startsWith('Digit') ? code.substring(5).charCodeAt(0) : '\x00';
     keyRepeatManager.post(isDown, code, { symbol, ctrlKey: false, shiftKey: false });
+}
+
+// Many games poll "is the key down right now" once per frame (~70 ms at 14 fps).
+// A quick tap can be pressed and released between two polls and never seen, so
+// every press lasts at least this long, like a real key would.
+const MIN_PRESS_MS = 150;
+const pressedAt = new Map();
+const pendingUp = new Map();
+
+function postKey(isDown, code) {
+    if (isDown) {
+        if (pendingUp.has(code)) {
+            // pressed again before the delayed release: release first, then press
+            clearTimeout(pendingUp.get(code));
+            pendingUp.delete(code);
+            sendKey(false, code);
+        }
+        pressedAt.set(code, performance.now());
+        sendKey(true, code);
+        return;
+    }
+    const held = performance.now() - (pressedAt.get(code) ?? 0);
+    if (held >= MIN_PRESS_MS) {
+        sendKey(false, code);
+        return;
+    }
+    if (pendingUp.has(code)) return;
+    pendingUp.set(code, setTimeout(() => {
+        pendingUp.delete(code);
+        sendKey(false, code);
+    }, MIN_PRESS_MS - held));
 }
 
 function tapKey(code) {
@@ -427,6 +458,34 @@ async function ensureAppInstalled(lib, entry) {
     return !!appFile;
 }
 
+// Games installed before vendor detection existed get checked once: a
+// Motorola build installed as Nokia ignores the soft keys. Returns true when
+// it changed the setting and reloads.
+async function fixPhoneType(lib) {
+    if (!game || game.phoneChecked || game.source === 'catalog') return false;
+    updateGame(APP_ID, { phoneChecked: true });
+    try {
+        const blob = await cjFileBlob("/files/" + APP_ID + "/app.jar");
+        if (!blob) return false;
+        const vendor = await guessPhoneFromJar(await blob.arrayBuffer());
+        const conf = await cjFileBlob("/files/" + APP_ID + "/config/settings.conf");
+        const current = conf ? ((await conf.text()).match(/^phone:(.*)$/m) || [])[1]?.trim() : null;
+        if (!vendor || vendor === current) return false;
+
+        const launcherUtil = await lib.pl.zb3.freej2me.launcher.LauncherUtil;
+        const HashMap = await lib.java.util.HashMap;
+        const map = await new HashMap();
+        await map.put('phone', vendor);
+        await launcherUtil.saveApp(APP_ID, map, null, null);
+        updateGame(APP_ID, { phone: vendor });
+        location.reload();
+        return true;
+    } catch (e) {
+        console.error('phone check failed', e);
+        return false;
+    }
+}
+
 async function reinstallFromArchive(lib) {
     useEmulator(lib);
     setStatus(t('add.fetching', { pct: '' }), 60);
@@ -612,6 +671,7 @@ async function init() {
             return;
         }
     }
+    if (await fixPhoneType(lib)) return;
     updateGame(APP_ID, { playedAt: Date.now() });
 
     setStatus(t('play.opening'), 72);
