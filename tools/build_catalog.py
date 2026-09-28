@@ -36,7 +36,7 @@ DEFAULT_SETTINGS = {
 
 FIXED_TIME = (2000, 1, 1, 0, 0, 0)  # deterministic zips -> stable versions
 
-PUBLIC_FIELDS = ("id", "name", "vendor", "year", "size", "phone", "genre", "desc",
+PUBLIC_FIELDS = ("id", "name", "vendor", "year", "size", "phone", "genre", "desc", "genre_en", "desc_en",
                  "license", "source", "keypad", "private", "external")
 
 

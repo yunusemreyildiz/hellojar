@@ -48,6 +48,28 @@ a { color: var(--accent); }
     margin-bottom: 18px;
 }
 .brand-icon { width: 44px; height: 44px; border-radius: 11px; }
+.brand-text { min-width: 0; }
+.lang-switch {
+    margin-left: auto;
+    align-self: flex-start;
+    display: flex;
+    padding: 3px;
+    gap: 2px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+}
+.lang-switch button {
+    border: 0;
+    border-radius: 7px;
+    padding: 5px 9px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .03em;
+}
+.lang-switch button[aria-pressed="true"] { background: var(--key); color: var(--text); }
 .top h1 { margin: 0; font-size: 22px; letter-spacing: .01em; }
 .wordmark { font-size: 26px !important; font-weight: 800; letter-spacing: -.02em !important; line-height: 1.1; }
 .w-hello { color: var(--hello); }
@@ -353,7 +375,7 @@ button.chip { cursor: pointer; }
     box-shadow: 0 12px 30px rgba(0,0,0,.5);
     font-size: 14px;
 }
-#pending-bar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#pending-bar span { flex: 1; min-width: 0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .icon-btn { border: 0; background: transparent; color: var(--muted); width: 32px; height: 32px; border-radius: 8px; font-size: 15px; }
 
 /* ---------- buttons / forms ---------- */

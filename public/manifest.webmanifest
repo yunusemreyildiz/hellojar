@@ -1,7 +1,7 @@
 {
-  "name": "hellojar — eski cep oyunları",
+  "name": "hellojar",
   "short_name": "hellojar",
-  "description": "Eski tuşlu telefon (J2ME) oyunlarını tarayıcında oyna.",
+  "description": "Old keypad phone (J2ME) games in your browser / Eski tuşlu telefon oyunları tarayıcında.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

@@ -9,6 +9,8 @@
       "phone": "Nokia",
       "genre": "Arcade",
       "desc": "Klasik tuğla kırma: topu raketle karşıla, tüm blokları kır.",
+      "genre_en": "Arcade",
+      "desc_en": "Classic brick breaker: catch the ball with the paddle and smash every block.",
       "license": "GPL-2.0",
       "source": "https://sourceforge.net/projects/abo/",
       "version": "e558d3de9de1",
@@ -23,6 +25,8 @@
       "phone": "Nokia",
       "genre": "Strateji",
       "desc": "Şehrini kur, enerji üret, silah yap; bilgisayara karşı gerçek zamanlı strateji.",
+      "genre_en": "Strategy",
+      "desc_en": "Build your city, produce energy, make weapons; real-time strategy against the computer.",
       "license": "GPL-3.0",
       "source": "https://sourceforge.net/projects/milcity/",
       "version": "c56632fe626b",
@@ -37,6 +41,8 @@
       "phone": "Nokia",
       "genre": "Masa oyunu",
       "desc": "Klasik Reversi (Othello): taşları çevir, tahtayı ele geçir.",
+      "genre_en": "Board game",
+      "desc_en": "Classic Reversi (Othello): flip the pieces and take over the board.",
       "license": "GPL-2.0",
       "source": "https://sourceforge.net/projects/oware-midlet/",
       "version": "9efad4474d07",
@@ -49,6 +55,8 @@
       "year": 2007,
       "genre": "Macera",
       "desc": "Oceanic 815 kazasından sağ kurtulanlarla adanın gizemini çöz. Nokia N80 için 352x416 sürümünü seç.",
+      "genre_en": "Adventure",
+      "desc_en": "Solve the island's mystery with the survivors of the Oceanic 815 crash. Pick the 352x416 version for the Nokia N80.",
       "external": "http://dedomil.net/games/278/screens"
     }
   ]

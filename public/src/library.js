@@ -4,6 +4,7 @@ import { listGames, getGame, saveGame, updateGame, removeGame, loadCatalog } fro
 import { SCREEN_SIZES, PHONE_TYPES } from "./detect.js";
 import { initDirectory, pendingDownload, clearPending } from "./directory.js";
 import { unwrapJar } from "./zip.js";
+import { t, tHtml, localized, applyI18n, initLangSwitch } from "./i18n.js";
 import {
     loadEmulator, analyseJar, install, readSettings, saveSettings,
     uninstall, wipeSaves, TOUCH_SIZES,
@@ -12,10 +13,10 @@ import {
 const $ = sel => document.querySelector(sel);
 const fileInput = $('#file-input');
 
-const SIZE_NOTES = {
-    '128x160': 'eski S40', '176x208': 'S60 / N-Gage', '176x220': 'Sony Ericsson',
-    '240x320': 'en yaygın', '352x416': 'Nokia N80/N90', '360x640': 'dokunmatik',
-};
+const NOTED_SIZES = ['128x160', '176x208', '176x220', '240x320', '352x416', '360x640'];
+function sizeNotes() {
+    return Object.fromEntries(NOTED_SIZES.map(s => [s, t('size.' + s)]));
+}
 
 let emulatorReady = false;
 function warmUpEmulator() {
@@ -113,7 +114,7 @@ function renderLibrary() {
 
         const more = document.createElement('button');
         more.className = 'more';
-        more.setAttribute('aria-label', game.name + ' ayarları');
+        more.setAttribute('aria-label', t('lib.settingsFor', { name: game.name }));
         more.textContent = '⋯';
         more.onclick = () => openManage(game.id);
 
@@ -141,20 +142,20 @@ async function renderCatalog() {
         const h = document.createElement('h3');
         h.textContent = g.name;
         const meta = document.createElement('p');
-        meta.textContent = [g.genre, g.vendor, g.year].filter(Boolean).join(' · ');
+        meta.textContent = [localized(g, 'genre'), g.vendor, g.year].filter(Boolean).join(' · ');
         const desc = document.createElement('p');
         desc.className = 'desc';
-        desc.textContent = g.desc || '';
+        desc.textContent = localized(g, 'desc');
         info.append(h, meta, desc);
         if (g.source) {
             const lic = document.createElement('p');
             lic.className = 'license';
-            lic.append((g.license || 'Açık kaynak') + ' · ');
+            lic.append((g.license || t('cat.openSource')) + ' · ');
             const a = document.createElement('a');
             a.href = g.source;
             a.target = '_blank';
             a.rel = 'noopener';
-            a.textContent = 'kaynak kodu';
+            a.textContent = t('cat.sourceCode');
             lic.appendChild(a);
             info.appendChild(lic);
         }
@@ -162,7 +163,7 @@ async function renderCatalog() {
         const play = document.createElement('a');
         play.className = 'btn primary';
         play.href = playUrl(g.id);
-        play.textContent = getGame(g.id) ? 'Devam' : 'Oyna';
+        play.textContent = getGame(g.id) ? t('cat.continue') : t('cat.play');
 
         item.append(info, play);
         list.appendChild(item);
@@ -184,7 +185,7 @@ function showPendingBar() {
         bar.hidden = true;
         return;
     }
-    $('#pending-name').textContent = p.name;
+    $('#pending-text').innerHTML = tHtml('pending.text', { name: p.name });
     bar.hidden = false;
 }
 
@@ -221,7 +222,7 @@ async function addFile(file, hint = null) {
     $('#pending-bar').hidden = true;
 
     if (/\.jad$/i.test(file.name)) {
-        toast('Bu bir JAD dosyası. Oyunun kendisi olan .jar (ya da .zip) dosyasını seç.');
+        toast(t('add.isJad'));
         return;
     }
 
@@ -231,9 +232,7 @@ async function addFile(file, hint = null) {
     $('#add-loading').hidden = false;
     $('#add-form').hidden = true;
     $('#add-error').hidden = true;
-    $('#add-loading-text').textContent = emulatorReady
-        ? 'Oyun inceleniyor…'
-        : 'Emülatör hazırlanıyor… (ilk seferde biraz sürebilir)';
+    $('#add-loading-text').textContent = emulatorReady ? t('add.analysing') : t('add.preparing');
 
     try {
         let buffer = await file.arrayBuffer();
@@ -253,7 +252,7 @@ async function addFile(file, hint = null) {
 
         await loadEmulator();
         emulatorReady = true;
-        $('#add-loading-text').textContent = 'Oyun inceleniyor…';
+        $('#add-loading-text').textContent = t('add.analysing');
 
         pending = await analyseJar(buffer, fileName);
         if (hint) {
@@ -272,10 +271,8 @@ async function addFile(file, hint = null) {
         const box = $('#add-error');
         box.hidden = false;
         box.textContent = e?.message === 'not-a-jar'
-            ? 'Bu dosyada bir J2ME oyunu (.jar) bulunamadı ya da dosya bozuk. Symbian (.sis) oyunları çalışmaz.'
-            : navigator.onLine === false
-                ? 'Emülatör yüklenemedi: internet bağlantısı gerekiyor.'
-                : 'Oyun okunamadı. Dosya bozuk olabilir ya da bu oyun desteklenmiyor olabilir.';
+            ? t('add.notJar')
+            : navigator.onLine === false ? t('add.offline') : t('add.unreadable');
     } finally {
         busy = false;
     }
@@ -290,7 +287,7 @@ function showAddForm(p) {
     $('#add-title').textContent = p.name;
     $('#add-meta').textContent = [p.vendor, p.fileName].filter(Boolean).join(' · ');
 
-    fillSelect($('#add-size'), SCREEN_SIZES, p.size, SIZE_NOTES);
+    fillSelect($('#add-size'), SCREEN_SIZES, p.size, sizeNotes());
     $('#add-size-badge').hidden = !p.sizeDetected;
     $('#add-size').onchange = () => { $('#add-size-badge').hidden = $('#add-size').value !== p.size || !p.sizeDetected; };
     fillSelect($('#add-phone'), PHONE_TYPES, p.phone);
@@ -305,7 +302,7 @@ $('#add-confirm').addEventListener('click', async () => {
     busy = true;
     const btn = $('#add-confirm');
     btn.disabled = true;
-    btn.textContent = 'Ekleniyor…';
+    btn.textContent = t('add.adding');
 
     try {
         const size = $('#add-size').value;
@@ -331,9 +328,9 @@ $('#add-confirm').addEventListener('click', async () => {
         location.href = playUrl(id);
     } catch (e) {
         console.error(e);
-        toast('Oyun eklenemedi. Tekrar dener misin?');
+        toast(t('add.failed'));
         btn.disabled = false;
-        btn.textContent = 'Ekle ve oyna';
+        btn.textContent = t('add.confirm');
         busy = false;
     }
 });
@@ -359,7 +356,7 @@ async function openManage(id) {
         const settings = await readSettings(id);
         if (managed?.id !== id) return;
         const size = settings.width ? `${settings.width}x${settings.height}` : game.size;
-        fillSelect($('#manage-size'), SCREEN_SIZES, size, SIZE_NOTES);
+        fillSelect($('#manage-size'), SCREEN_SIZES, size, sizeNotes());
         fillSelect($('#manage-phone'), PHONE_TYPES, settings.phone || game.phone || 'Nokia');
         $('#manage-keypad').value = game.keypad || 'full';
         $('#manage-sound').checked = (settings.sound || 'on') === 'on';
@@ -368,7 +365,7 @@ async function openManage(id) {
     } catch (e) {
         console.error(e);
         closeSheets();
-        toast('Ayarlar okunamadı.');
+        toast(t('manage.readFailed'));
     }
 }
 
@@ -386,10 +383,10 @@ $('#manage-save').addEventListener('click', async () => {
         updateGame(managed.id, { size, phone, keypad: $('#manage-keypad').value });
         closeSheets();
         renderLibrary();
-        toast('Kaydedildi.');
+        toast(t('manage.saved'));
     } catch (e) {
         console.error(e);
-        toast('Kaydedilemedi.');
+        toast(t('manage.saveFailed'));
     } finally {
         busy = false;
     }
@@ -397,13 +394,13 @@ $('#manage-save').addEventListener('click', async () => {
 
 $('#manage-wipe').addEventListener('click', async () => {
     if (!managed || busy) return;
-    if (!confirm(`${managed.name} için kayıtlı ilerleme silinsin mi?`)) return;
+    if (!confirm(t('manage.wipeConfirm', { name: managed.name }))) return;
     busy = true;
     try {
         await wipeSaves(managed.id);
-        toast('Kayıtlar silindi.');
+        toast(t('manage.wiped'));
     } catch {
-        toast('Silinemedi.');
+        toast(t('manage.wipeFailed'));
     } finally {
         busy = false;
     }
@@ -411,7 +408,7 @@ $('#manage-wipe').addEventListener('click', async () => {
 
 $('#manage-remove').addEventListener('click', async () => {
     if (!managed || busy) return;
-    if (!confirm(`${managed.name} kütüphaneden kaldırılsın mı? Kayıtları da silinir.`)) return;
+    if (!confirm(t('manage.removeConfirm', { name: managed.name }))) return;
     busy = true;
     try {
         await uninstall(managed.id);
@@ -420,9 +417,9 @@ $('#manage-remove').addEventListener('click', async () => {
         closeSheets();
         renderLibrary();
         renderCatalog();
-        toast('Oyun kaldırıldı.');
+        toast(t('manage.removed'));
     } catch {
-        toast('Kaldırılamadı.');
+        toast(t('manage.removeFailed'));
     } finally {
         busy = false;
     }
@@ -459,7 +456,7 @@ async function takeSharedFile() {
         addFile(new File([await res.blob()], name));
     } catch (e) {
         console.error(e);
-        toast('Paylaşılan dosya alınamadı.');
+        toast(t('add.sharedFailed'));
     }
 }
 
@@ -506,6 +503,14 @@ document.addEventListener('pointerdown', e => {
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+applyI18n();
+initLangSwitch();
+window.addEventListener('langchange', () => {
+    renderLibrary();
+    renderCatalog();
+    showPendingBar();
+});
 
 renderLibrary();
 renderCatalog();

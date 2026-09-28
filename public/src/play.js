@@ -15,6 +15,7 @@ import midiBridgeNatives from "../libjs/libmidibridge.js";
 
 import { getGame, saveGame, updateGame, loadCatalog } from "./store.js";
 import { TOUCH_SIZES } from "./emu.js";
+import { t, getLang, setLang, applyI18n } from "./i18n.js";
 
 const APP_ID = new URLSearchParams(location.search).get('app');
 if (!APP_ID) location.replace('./');
@@ -41,7 +42,7 @@ const prefs = {
 let haptics = prefs.get('haptics', '1') === '1';
 
 const KEYPAD_MODES = ['full', 'nav', 'none'];
-const KEYPAD_LABELS = { full: 'Tam', nav: 'Sadece yön', none: 'Gizli (dokunmatik)' };
+const KEYPAD_LABELS = { full: 'play.kpFull', nav: 'play.kpNav', none: 'play.kpNone' };
 let game = getGame(APP_ID);
 let keypadMode = game?.keypad || 'full';
 
@@ -245,13 +246,14 @@ function initInput() {
 // ---------- menu ----------
 
 function syncMenuLabels() {
-    document.getElementById('haptics-state').textContent = haptics ? 'Açık' : 'Kapalı';
-    document.getElementById('keypad-state').textContent = KEYPAD_LABELS[keypadMode];
+    document.getElementById('haptics-state').textContent = haptics ? t('play.on') : t('play.off');
+    document.getElementById('keypad-state').textContent = t(KEYPAD_LABELS[keypadMode]);
+    document.getElementById('lang-state').textContent = getLang() === 'tr' ? 'Türkçe' : 'English';
     for (const m of KEYPAD_MODES) document.body.classList.toggle('kp-' + m, m === keypadMode);
     const fsBtn = menuEl.querySelector('[data-menu="fullscreen"]');
     const canFs = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
     fsBtn.hidden = !canFs;
-    fsBtn.textContent = (document.fullscreenElement || document.webkitFullscreenElement) ? 'Tam ekrandan çık' : 'Tam ekran';
+    fsBtn.textContent = (document.fullscreenElement || document.webkitFullscreenElement) ? t('play.exitFullscreen') : t('play.fullscreen');
 }
 
 let menuOpenedAt = 0;
@@ -278,6 +280,8 @@ function toggleFullscreen() {
 }
 
 function initMenu() {
+    applyI18n();
+    window.addEventListener('langchange', syncMenuLabels);
     document.querySelector('.float-menu').addEventListener('click', openMenu);
     menuEl.addEventListener('click', e => {
         // the click synthesized from the tap that opened the menu lands here too
@@ -295,6 +299,7 @@ function initMenu() {
                 autoscale();
                 break;
             case 'library': location.href = './'; break;
+            case 'lang': setLang(getLang() === 'tr' ? 'en' : 'tr'); syncMenuLabels(); break;
             case 'emu': closeMenu(); tapKey('Escape'); break;
             case 'reload': location.reload(); break;
             case 'close': closeMenu(); break;
@@ -380,7 +385,7 @@ async function init() {
 
     const catalogEntry = fetchCatalogEntry();
 
-    setStatus("Ses motoru yükleniyor…", 10);
+    setStatus(t('play.loadingAudio'), 10);
     window.libmidi = new LibMidi(createUnlockingAudioContext());
     await window.libmidi.init();
     window.libmidi.midiPlayer.addEventListener('end-of-media', e => {
@@ -388,7 +393,7 @@ async function init() {
     });
     window.libmedia = new LibMedia();
 
-    setStatus("Java sanal makinesi yükleniyor…", 25);
+    setStatus(t('play.loadingJava'), 25);
     await cheerpjInit({
         enableDebug: false,
         natives: {
@@ -414,7 +419,7 @@ async function init() {
                 screenCtx.canvas.height = height;
                 autoscale();
                 if (first) {
-                    setStatus("Oyun başlatılıyor…", 80);
+                    setStatus(t('play.starting'), 80);
                     waitForFirstFrame();
                 }
             },
@@ -455,11 +460,11 @@ async function init() {
         }
     });
 
-    setStatus("Emülatör yükleniyor…", 45);
+    setStatus(t('play.loadingEmu'), 45);
     const lib = await cheerpjRunLibrary(cheerpjWebRoot + "/freej2me-web.jar");
     const FreeJ2ME = await lib.org.recompile.freej2me.FreeJ2ME;
 
-    setStatus("Oyun hazırlanıyor…", 65);
+    setStatus(t('play.preparingGame'), 65);
     const entry = await catalogEntry;
     if (!game && entry) {
         // first time a catalog game is opened: put it in the library
@@ -475,15 +480,15 @@ async function init() {
         showGameInfo(game);
     }
     if (!(await ensureAppInstalled(lib, entry))) {
-        fail("Bu oyun bu cihazda kurulu değil. Kütüphaneden yeniden ekleyin.");
+        fail(t('play.notInstalled'));
         return;
     }
     updateGame(APP_ID, { playedAt: Date.now() });
 
-    setStatus("Oyun açılıyor…", 72);
+    setStatus(t('play.opening'), 72);
     FreeJ2ME.main(['app', APP_ID]).catch(e => {
         e.printStackTrace?.();
-        fail("Oyun çöktü. Menüden ekran boyutunu ya da telefon tipini değiştirip tekrar deneyin.");
+        fail(t('play.crashed'));
     });
 }
 
@@ -491,7 +496,7 @@ if (APP_ID) {
     init().catch(e => {
         console.error(e);
         fail(navigator.onLine === false
-            ? "İnternet bağlantısı gerekli (Java motoru çevrim içi yükleniyor)."
-            : "Yüklenemedi: " + (e?.message || e));
+            ? t('play.offline')
+            : t('play.loadFailed', { error: e?.message || e }));
     });
 }

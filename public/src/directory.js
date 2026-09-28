@@ -2,6 +2,8 @@
 // (built by tools/crawl_dedomil.py). We only show names/thumbnails and send the
 // player to dedomil's download page; the jar comes back through the add flow.
 
+import { t, num, locale } from "./i18n.js";
+
 const PAGE = 48;
 
 // resolutions that look and play best here, most preferred first
@@ -79,12 +81,12 @@ function applyFilters() {
         const rank = g => { const i = featured.indexOf(g[0]); return i === -1 ? featured.length : i; };
         results.sort((a, b) => rank(a) - rank(b));
     } else if (sort === 'new') results.sort((a, b) => (b[4] > a[4] ? 1 : b[4] < a[4] ? -1 : 0));
-    else if (sort === 'az') results.sort((a, b) => a[1].localeCompare(b[1], 'tr'));
+    else if (sort === 'az') results.sort((a, b) => a[1].localeCompare(b[1], locale()));
     // otherwise "pop" is the file's own order (most downloaded first)
 
     shown = 0;
     $('#dir-grid').innerHTML = '';
-    $('#dir-count').textContent = `${results.length.toLocaleString('tr')} oyun`;
+    $('#dir-count').textContent = t('dir.count', { count: num(results.length) });
     $('#dir-empty').hidden = results.length > 0;
     renderMore();
 }
@@ -114,7 +116,7 @@ function card(g) {
         const star = document.createElement('span');
         star.className = 'star';
         star.textContent = '★';
-        star.title = 'Öne çıkan';
+        star.title = t('dir.featured');
         el.appendChild(star);
     }
 
@@ -150,14 +152,14 @@ function openGame(id) {
 
     $('#dir-thumb').src = current.thumb || 'icons/icon-192.png';
     $('#dir-title').textContent = current.name;
-    $('#dir-meta').textContent = [current.vendor, `${g[3].toLocaleString('tr')} indirme`].filter(Boolean).join(' · ');
+    $('#dir-meta').textContent = [current.vendor, t('dir.downloads', { count: num(g[3]) })].filter(Boolean).join(' · ');
 
     const sel = $('#dir-res');
     sel.innerHTML = '';
     options.forEach((o, i) => {
         const opt = document.createElement('option');
         opt.value = String(i);
-        opt.textContent = o.res + (i === 0 ? ' (önerilen)' : '');
+        opt.textContent = i === 0 ? t('dir.recommendedOpt', { res: o.res }) : o.res;
         sel.appendChild(opt);
     });
     sel.onchange = () => { $('#dir-rec-badge').hidden = sel.value !== '0'; };
@@ -202,14 +204,18 @@ export async function initDirectory(opts) {
 
     const doc = await load();
     if (!doc) {
-        $('#dir-count').textContent = 'Katalog şu an yüklenemedi.';
+        $('#dir-count').textContent = t('dir.loadError');
         return;
     }
-    $('#dir-sub').textContent =
-        `${doc.games.length.toLocaleString('tr')} eski cep oyunu. Seç, dedomil'den indir, burada oyna.`;
+    const subtitle = () => { $('#dir-sub').textContent = t('dir.subCount', { count: num(doc.games.length) }); };
+    subtitle();
+    window.addEventListener('langchange', () => {
+        subtitle();
+        applyFilters();
+    });
 
-    let t;
-    $('#dir-q').addEventListener('input', () => { clearTimeout(t); t = setTimeout(applyFilters, 150); });
+    let typing;
+    $('#dir-q').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(applyFilters, 150); });
     $('#dir-sort').addEventListener('change', applyFilters);
     $('#dir-brands').addEventListener('click', e => {
         const chip = e.target.closest('[data-brand]');

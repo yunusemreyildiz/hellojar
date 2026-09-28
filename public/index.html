@@ -18,15 +18,19 @@
 <body>
     <header class="top">
         <img src="icons/icon-192.png" alt="" class="brand-icon">
-        <div>
+        <div class="brand-text">
             <h1 class="wordmark" aria-label="hellojar"><span class="w-hello">hello</span><span class="w-jar">jar</span></h1>
-            <p>Eski cep oyunları, tarayıcında</p>
+            <p data-i18n="brand.tagline">Eski cep oyunları, tarayıcında</p>
+        </div>
+        <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Dil">
+            <button data-set-lang="tr" aria-pressed="true" lang="tr">TR</button>
+            <button data-set-lang="en" aria-pressed="false" lang="en">EN</button>
         </div>
     </header>
 
     <nav class="tabs" role="tablist">
-        <button role="tab" data-tab="library" aria-selected="true">Kütüphanem</button>
-        <button role="tab" data-tab="discover" aria-selected="false">Keşfet</button>
+        <button role="tab" data-tab="library" aria-selected="true" data-i18n="tab.library">Kütüphanem</button>
+        <button role="tab" data-tab="discover" aria-selected="false" data-i18n="tab.discover">Keşfet</button>
     </nav>
 
     <main>
@@ -34,41 +38,41 @@
             <div id="games" class="games">
                 <button class="add-card" data-action="add">
                     <span class="plus">+</span>
-                    <b>Oyun ekle</b>
-                    <small>.jar dosyası seç</small>
+                    <b data-i18n="lib.add">Oyun ekle</b>
+                    <small data-i18n="lib.addSub">.jar dosyası seç</small>
                 </button>
             </div>
 
             <div id="empty" class="empty" hidden>
-                <h2>Kütüphanen boş</h2>
-                <p>Telefonuna indirdiğin bir <b>.jar</b> oyununu ekle ya da Keşfet'ten hazır bir oyunla başla.</p>
+                <h2 data-i18n="lib.emptyTitle">Kütüphanen boş</h2>
+                <p data-i18n-html="lib.emptyText">Telefonuna indirdiğin bir <b>.jar</b> oyununu ekle ya da Keşfet'ten hazır bir oyunla başla.</p>
                 <div class="row">
-                    <button class="btn primary" data-action="add">Jar dosyası seç</button>
-                    <button class="btn" data-tab-link="discover">Oyun bul</button>
+                    <button class="btn primary" data-action="add" data-i18n="lib.pickJar">Jar dosyası seç</button>
+                    <button class="btn" data-tab-link="discover" data-i18n="lib.findGame">Oyun bul</button>
                 </div>
             </div>
         </section>
 
         <section id="tab-discover" role="tabpanel" hidden>
             <div id="catalog-block" hidden>
-                <h2 class="section-title">Hemen oyna</h2>
-                <p class="section-sub">Yazarlarının ücretsiz dağıttığı oyunlar. İndirmeye gerek yok, dokun ve oyna.</p>
+                <h2 class="section-title" data-i18n="cat.title">Hemen oyna</h2>
+                <p class="section-sub" data-i18n="cat.sub">Yazarlarının ücretsiz dağıttığı oyunlar. İndirmeye gerek yok, dokun ve oyna.</p>
                 <div id="catalog" class="catalog"></div>
             </div>
 
-            <h2 class="section-title">Oyun kataloğu</h2>
+            <h2 class="section-title" data-i18n="dir.title">Oyun kataloğu</h2>
             <p class="section-sub" id="dir-sub">Binlerce eski cep oyunu. Seç, dedomil'den indir, burada oyna.</p>
 
             <div class="dir-tools">
-                <input type="search" id="dir-q" placeholder="Oyun ara, ör. Asphalt" enterkeyhint="search" aria-label="Oyun ara" autocomplete="off">
-                <select id="dir-sort" aria-label="Sırala">
-                    <option value="pop">Popüler</option>
-                    <option value="new">Yeni</option>
-                    <option value="az">A-Z</option>
+                <input type="search" id="dir-q" placeholder="Oyun ara, ör. Asphalt" enterkeyhint="search" aria-label="Oyun ara" autocomplete="off" data-i18n-attr="placeholder:dir.search; aria-label:dir.searchLabel">
+                <select id="dir-sort" aria-label="Sırala" data-i18n-attr="aria-label:dir.sort">
+                    <option value="pop" data-i18n="dir.sortPop">Popüler</option>
+                    <option value="new" data-i18n="dir.sortNew">Yeni</option>
+                    <option value="az" data-i18n="dir.sortAz">A-Z</option>
                 </select>
             </div>
-            <div class="chips" id="dir-brands" role="group" aria-label="Marka">
-                <button class="chip" data-brand="" aria-pressed="true">Tümü</button>
+            <div class="chips" id="dir-brands" role="group" aria-label="Marka" data-i18n-attr="aria-label:dir.brand">
+                <button class="chip" data-brand="" aria-pressed="true" data-i18n="dir.all">Tümü</button>
                 <button class="chip" data-brand="1" aria-pressed="false">Nokia</button>
                 <button class="chip" data-brand="2" aria-pressed="false">Sony Ericsson</button>
                 <button class="chip" data-brand="4" aria-pressed="false">Samsung</button>
@@ -79,15 +83,15 @@
             <p id="dir-count" class="muted small"></p>
             <div id="dir-grid" class="dir-grid"></div>
             <div id="dir-more" class="loading small" hidden><div class="spinner"></div></div>
-            <p id="dir-empty" class="muted" hidden>Sonuç yok. Başka bir isimle dene.</p>
+            <p id="dir-empty" class="muted" hidden data-i18n="dir.empty">Sonuç yok. Başka bir isimle dene.</p>
 
-            <p class="fineprint">Katalog <a href="http://dedomil.net/games" target="_blank" rel="noopener">dedomil.net</a>'in herkese açık listelerinden derlenir; hellojar oyun dosyası barındırmaz ve dedomil ile bağlantılı değildir. İndirme dedomil'in kendi sayfasında yapılır. Oyunlar cihazında kalır, hiçbir sunucuya yüklenmez.</p>
+            <p class="fineprint" data-i18n-html="dir.fineprint">Katalog <a href="http://dedomil.net/games" target="_blank" rel="noopener">dedomil.net</a>'in herkese açık listelerinden derlenir; hellojar oyun dosyası barındırmaz ve dedomil ile bağlantılı değildir. İndirme dedomil'in kendi sayfasında yapılır. Oyunlar cihazında kalır, hiçbir sunucuya yüklenmez.</p>
         </section>
     </main>
 
     <input type="file" id="file-input" accept=".jar,.zip,application/java-archive,application/x-java-archive,application/zip" hidden>
 
-    <div id="drop-hint" hidden><div>Jar dosyasını bırak</div></div>
+    <div id="drop-hint" hidden><div data-i18n="lib.dropHint">Jar dosyasını bırak</div></div>
 
     <!-- add game -->
     <div class="sheet-backdrop" id="add-sheet" hidden>
@@ -95,7 +99,7 @@
             <div class="sheet-handle"></div>
             <div id="add-loading" class="loading">
                 <div class="spinner"></div>
-                <p id="add-loading-text">Oyun inceleniyor…</p>
+                <p id="add-loading-text" data-i18n="add.analysing">Oyun inceleniyor…</p>
             </div>
             <div id="add-error" class="error-box" hidden></div>
             <div id="add-form" hidden>
@@ -107,21 +111,21 @@
                     </div>
                 </div>
                 <label class="field">
-                    <span>Ekran boyutu <em id="add-size-badge" class="badge">algılandı</em></span>
+                    <span><span data-i18n="add.size">Ekran boyutu</span> <em id="add-size-badge" class="badge" data-i18n="add.detected">algılandı</em></span>
                     <select id="add-size"></select>
                 </label>
                 <label class="field">
-                    <span>Tuş düzeni (telefon tipi)</span>
+                    <span data-i18n="add.phone">Tuş düzeni (telefon tipi)</span>
                     <select id="add-phone"></select>
                 </label>
                 <fieldset id="add-exists" class="field" hidden>
-                    <legend>Bu oyun zaten kütüphanende</legend>
-                    <label class="radio"><input type="radio" name="mode" value="replace" checked> Mevcut oyunu bununla değiştir <small>(kayıtlar korunur)</small></label>
-                    <label class="radio"><input type="radio" name="mode" value="new"> Ayrı bir oyun olarak ekle</label>
+                    <legend data-i18n="add.exists">Bu oyun zaten kütüphanende</legend>
+                    <label class="radio"><input type="radio" name="mode" value="replace" checked> <span data-i18n="add.replace">Mevcut oyunu bununla değiştir</span> <small data-i18n="add.replaceNote">(kayıtlar korunur)</small></label>
+                    <label class="radio"><input type="radio" name="mode" value="new"> <span data-i18n="add.separate">Ayrı bir oyun olarak ekle</span></label>
                 </fieldset>
                 <div class="row end">
-                    <button class="btn" data-action="close-sheet">Vazgeç</button>
-                    <button class="btn primary" id="add-confirm">Ekle ve oyna</button>
+                    <button class="btn" data-action="close-sheet" data-i18n="add.cancel">Vazgeç</button>
+                    <button class="btn primary" id="add-confirm" data-i18n="add.confirm">Ekle ve oyna</button>
                 </div>
             </div>
         </div>
@@ -141,23 +145,23 @@
 
             <div id="dir-step1">
                 <label class="field">
-                    <span>Sürüm (ekran boyutu) <em class="badge" id="dir-rec-badge">önerilen</em></span>
+                    <span><span data-i18n="dir.version">Sürüm (ekran boyutu)</span> <em class="badge" id="dir-rec-badge" data-i18n="dir.recommended">önerilen</em></span>
                     <select id="dir-res"></select>
                 </label>
-                <button class="btn primary wide" id="dir-go">Dedomil'den indir</button>
-                <p class="muted small">Dedomil yeni sekmede açılır. Oradaki <b>JAR</b> (ya da <b>download</b>) linkine dokun, JAD değil. İndirme bitince buraya dön.</p>
-                <p class="ad-note">Dedomil'de ilk birkaç dokunuş reklam açabilir. Reklam sekmesini kapatıp dedomil'e geri dön ve linke tekrar dokun; birkaç denemeden sonra indirme başlar.</p>
+                <button class="btn primary wide" id="dir-go" data-i18n="dir.go">Dedomil'den indir</button>
+                <p class="muted small" data-i18n-html="dir.goHint">Dedomil yeni sekmede açılır. Oradaki <b>JAR</b> (ya da <b>download</b>) linkine dokun, JAD değil. İndirme bitince buraya dön.</p>
+                <p class="ad-note" data-i18n="dir.adNote">Dedomil'de ilk birkaç dokunuş reklam açabilir. Reklam sekmesini kapatıp dedomil'e geri dön ve linke tekrar dokun; birkaç denemeden sonra indirme başlar.</p>
             </div>
 
             <div id="dir-step2" hidden>
                 <ol class="steps compact">
-                    <li>Açılan dedomil sayfasında <b>JAR</b> ya da <b>download</b> linkine dokun. Reklam açılırsa kapatıp geri dön ve tekrar dokun.</li>
-                    <li>İndirme bitince buraya dön ve dosyayı seç.</li>
+                    <li data-i18n-html="dir.step1">Açılan dedomil sayfasında <b>JAR</b> ya da <b>download</b> linkine dokun. Reklam açılırsa kapatıp geri dön ve tekrar dokun.</li>
+                    <li data-i18n="dir.step2">İndirme bitince buraya dön ve dosyayı seç.</li>
                 </ol>
-                <button class="btn primary wide" id="dir-pick">İndirdiğim dosyayı seç</button>
+                <button class="btn primary wide" id="dir-pick" data-i18n="dir.pick">İndirdiğim dosyayı seç</button>
                 <div class="row between">
-                    <button class="btn ghost" id="dir-again">Sayfayı tekrar aç</button>
-                    <button class="btn ghost" data-action="close-sheet">Sonra</button>
+                    <button class="btn ghost" id="dir-again" data-i18n="dir.again">Sayfayı tekrar aç</button>
+                    <button class="btn ghost" data-action="close-sheet" data-i18n="dir.later">Sonra</button>
                 </div>
             </div>
         </div>
@@ -176,45 +180,45 @@
             </div>
             <div id="manage-loading" class="loading small">
                 <div class="spinner"></div>
-                <p>Ayarlar okunuyor…</p>
+                <p data-i18n="manage.loading">Ayarlar okunuyor…</p>
             </div>
             <div id="manage-form" hidden>
                 <label class="field">
-                    <span>Ekran boyutu</span>
+                    <span data-i18n="add.size">Ekran boyutu</span>
                     <select id="manage-size"></select>
                 </label>
                 <label class="field">
-                    <span>Tuş düzeni (telefon tipi)</span>
+                    <span data-i18n="add.phone">Tuş düzeni (telefon tipi)</span>
                     <select id="manage-phone"></select>
                 </label>
                 <label class="field">
-                    <span>Ekrandaki tuşlar</span>
+                    <span data-i18n="manage.keypad">Ekrandaki tuşlar</span>
                     <select id="manage-keypad">
-                        <option value="full">Tam tuş takımı</option>
-                        <option value="nav">Sadece yön ve seçim tuşları</option>
-                        <option value="none">Gizli (dokunmatik oyunlar)</option>
+                        <option value="full" data-i18n="manage.kpFull">Tam tuş takımı</option>
+                        <option value="nav" data-i18n="manage.kpNav">Sadece yön ve seçim tuşları</option>
+                        <option value="none" data-i18n="manage.kpNone">Gizli (dokunmatik oyunlar)</option>
                     </select>
                 </label>
                 <label class="switch">
                     <input type="checkbox" id="manage-sound">
-                    <span>Ses</span>
+                    <span data-i18n="manage.sound">Ses</span>
                 </label>
-                <p class="muted small">Oyun açılmıyor ya da ekran kesik görünüyorsa önce ekran boyutunu, sonra tuş düzenini değiştir.</p>
+                <p class="muted small" data-i18n="manage.help">Oyun açılmıyor ya da ekran kesik görünüyorsa önce ekran boyutunu, sonra tuş düzenini değiştir.</p>
                 <div class="row end">
-                    <button class="btn primary" id="manage-save">Kaydet</button>
+                    <button class="btn primary" id="manage-save" data-i18n="manage.save">Kaydet</button>
                 </div>
                 <div class="danger-zone">
-                    <button class="btn ghost" id="manage-wipe">Kayıtları sil</button>
-                    <button class="btn ghost danger" id="manage-remove">Oyunu kaldır</button>
+                    <button class="btn ghost" id="manage-wipe" data-i18n="manage.wipe">Kayıtları sil</button>
+                    <button class="btn ghost danger" id="manage-remove" data-i18n="manage.remove">Oyunu kaldır</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="pending-bar" hidden>
-        <span><b id="pending-name"></b> indirildi mi?</span>
-        <button class="btn primary" id="pending-pick">Dosyayı seç</button>
-        <button class="icon-btn" id="pending-dismiss" aria-label="Kapat">✕</button>
+        <span id="pending-text"></span>
+        <button class="btn primary" id="pending-pick" data-i18n="pending.pick">Dosyayı seç</button>
+        <button class="icon-btn" id="pending-dismiss" aria-label="Kapat" data-i18n-attr="aria-label:common.close">✕</button>
     </div>
 
     <div id="toast" role="status" aria-live="polite" hidden></div>

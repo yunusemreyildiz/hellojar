@@ -18,27 +18,27 @@
     <main id="app">
         <section id="screen-area">
             <canvas tabindex="0" id="display" width="240" height="320"></canvas>
-            <button class="float-menu" data-action="menu" aria-label="Menü">
+            <button class="float-menu" data-action="menu" aria-label="Menü" data-i18n-attr="aria-label:play.menu">
                 <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
             </button>
         </section>
 
-        <section id="pad" class="keypad-part" aria-label="Tuş takımı">
+        <section id="pad" class="keypad-part" aria-label="Tuş takımı" data-i18n-attr="aria-label:play.keypad">
             <div class="soft-row">
-                <button class="key soft" data-key="F1" aria-label="Sol seçim tuşu"><i></i></button>
-                <button class="key menu" data-action="menu" aria-label="Menü">
+                <button class="key soft" data-key="F1" aria-label="Sol seçim tuşu" data-i18n-attr="aria-label:play.softLeft"><i></i></button>
+                <button class="key menu" data-action="menu" aria-label="Menü" data-i18n-attr="aria-label:play.menu">
                     <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
                 </button>
-                <button class="key soft" data-key="F2" aria-label="Sağ seçim tuşu"><i></i></button>
+                <button class="key soft" data-key="F2" aria-label="Sağ seçim tuşu" data-i18n-attr="aria-label:play.softRight"><i></i></button>
             </div>
 
             <div class="main-row">
                 <div class="dpad">
-                    <button class="key dir up" data-key="ArrowUp" aria-label="Yukarı"><b></b></button>
-                    <button class="key dir left" data-key="ArrowLeft" aria-label="Sol"><b></b></button>
-                    <button class="key ok" data-key="Enter" aria-label="Tamam"></button>
-                    <button class="key dir right" data-key="ArrowRight" aria-label="Sağ"><b></b></button>
-                    <button class="key dir down" data-key="ArrowDown" aria-label="Aşağı"><b></b></button>
+                    <button class="key dir up" data-key="ArrowUp" aria-label="Yukarı" data-i18n-attr="aria-label:play.up"><b></b></button>
+                    <button class="key dir left" data-key="ArrowLeft" aria-label="Sol" data-i18n-attr="aria-label:play.left"><b></b></button>
+                    <button class="key ok" data-key="Enter" aria-label="Tamam" data-i18n-attr="aria-label:play.ok"></button>
+                    <button class="key dir right" data-key="ArrowRight" aria-label="Sağ" data-i18n-attr="aria-label:play.right"><b></b></button>
+                    <button class="key dir down" data-key="ArrowDown" aria-label="Aşağı" data-i18n-attr="aria-label:play.down"><b></b></button>
                 </div>
 
                 <div class="numpad">
@@ -64,21 +64,22 @@
         <h1 id="loader-name">hellojar</h1>
         <p class="sub" id="loader-sub">&nbsp;</p>
         <div class="bar"><span id="progress"></span></div>
-        <p id="status">Hazırlanıyor…</p>
-        <p class="hint" id="loader-hint">İlk açılış 20–40 sn sürebilir, sonrakiler daha hızlıdır.</p>
-        <a href="./" class="back" id="loader-back" hidden>Kütüphaneye dön</a>
+        <p id="status" data-i18n="play.preparing">Hazırlanıyor…</p>
+        <p class="hint" id="loader-hint" data-i18n="play.firstLoad">İlk açılış 20–40 sn sürebilir, sonrakiler daha hızlıdır.</p>
+        <a href="./" class="back" id="loader-back" hidden data-i18n="play.backToLibrary">Kütüphaneye dön</a>
     </div>
 
     <div id="menu" hidden>
-        <div class="sheet" role="dialog" aria-label="Menü">
-            <h2>Menü</h2>
+        <div class="sheet" role="dialog" aria-label="Menü" data-i18n-attr="aria-label:play.menu">
+            <h2 data-i18n="play.menu">Menü</h2>
             <button data-menu="fullscreen">Tam ekran</button>
-            <button data-menu="haptics">Titreşim: <span id="haptics-state">Açık</span></button>
-            <button data-menu="keypad">Tuşlar: <span id="keypad-state">Tam</span></button>
-            <button data-menu="emu">Emülatör ayarları</button>
-            <button data-menu="reload">Oyunu yeniden başlat</button>
-            <button data-menu="library">Kütüphaneye dön</button>
-            <button data-menu="close" class="primary">Oyuna dön</button>
+            <button data-menu="haptics"><span data-i18n="play.haptics">Titreşim:</span> <span id="haptics-state">Açık</span></button>
+            <button data-menu="keypad"><span data-i18n="play.keys">Tuşlar:</span> <span id="keypad-state">Tam</span></button>
+            <button data-menu="lang"><span data-i18n="play.language">Dil:</span> <span id="lang-state">Türkçe</span></button>
+            <button data-menu="emu" data-i18n="play.emu">Emülatör ayarları</button>
+            <button data-menu="reload" data-i18n="play.restart">Oyunu yeniden başlat</button>
+            <button data-menu="library" data-i18n="play.backToLibrary">Kütüphaneye dön</button>
+            <button data-menu="close" class="primary" data-i18n="play.resume">Oyuna dön</button>
         </div>
     </div>
 
