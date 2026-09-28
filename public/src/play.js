@@ -54,11 +54,39 @@ function setStatus(text, pct) {
     if (pct != null) progressEl.style.width = pct + '%';
 }
 
+// First game on this device: point at the soft keys, which is where prompts
+// like "Enable sound? YES / NO" are answered (the arrows don't move there).
+function showSoftKeyTip() {
+    if (prefs.get('softTipSeen', '0') === '1' || keypadMode === 'none') return;
+    const key = document.querySelector('#pad [data-key="F1"]');
+    if (!key || !key.offsetParent) return;
+    prefs.set('softTipSeen', '1');
+
+    const tip = document.createElement('div');
+    tip.id = 'softkey-tip';
+    tip.textContent = t('play.softTip');
+    document.body.appendChild(tip);
+    const r = key.getBoundingClientRect();
+    const left = Math.max(12, r.left);
+    tip.style.left = left + 'px';
+    if (r.top > window.innerHeight / 2) {
+        tip.classList.add('above');
+        tip.style.bottom = (window.innerHeight - r.top + 10) + 'px';
+    } else {
+        tip.classList.add('below');
+        tip.style.top = (r.bottom + 10) + 'px';
+    }
+    const close = () => { tip.remove(); document.removeEventListener('pointerdown', close, true); };
+    setTimeout(close, 7000);
+    setTimeout(() => document.addEventListener('pointerdown', close, true), 800);
+}
+
 function hideLoader() {
     if (loader.classList.contains('done')) return;
     progressEl.style.width = '100%';
     loader.classList.add('done');
     setTimeout(() => loader.remove(), 500);
+    setTimeout(showSoftKeyTip, 1200);
     display.focus();
 }
 

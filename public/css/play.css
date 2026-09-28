@@ -114,8 +114,47 @@ button {
     width: 34%;
     height: 3px;
     border-radius: 2px;
-    background: var(--muted);
+    background: var(--accent);
+    opacity: .75;
 }
+/* a small corner mark: the soft keys pick what's written in the screen's bottom corners */
+.soft::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    width: 7px;
+    height: 7px;
+    border-top: 2px solid var(--muted);
+    opacity: .7;
+}
+.soft[data-key="F1"]::before { left: 10px; border-left: 2px solid var(--muted); border-top-left-radius: 2px; }
+.soft[data-key="F2"]::before { right: 10px; border-right: 2px solid var(--muted); border-top-right-radius: 2px; }
+.soft { position: relative; }
+
+#softkey-tip {
+    position: fixed;
+    z-index: 25;
+    max-width: min(300px, calc(100vw - 24px));
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #1a1206;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    pointer-events: none;
+    animation: tip-in .25s ease-out;
+}
+#softkey-tip::after {
+    content: "";
+    position: absolute;
+    left: 22px;
+    border: 8px solid transparent;
+}
+#softkey-tip.above::after { top: 100%; border-top-color: var(--accent); }
+#softkey-tip.below::after { bottom: 100%; border-bottom-color: var(--accent); }
+@keyframes tip-in { from { opacity: 0; transform: translateY(6px); } }
 .menu {
     width: clamp(44px, 12vmin, 60px);
     height: clamp(36px, 7vmin, 48px);
