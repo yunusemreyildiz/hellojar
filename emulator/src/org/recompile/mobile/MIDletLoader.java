@@ -41,6 +41,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -525,8 +526,26 @@ public class MIDletLoader extends URLClassLoader {
 		}
 
 		private class ASMMethodVisitor extends MethodAdapter implements Opcodes {
+			// labels already emitted; a jump to one of them is a loop's back edge
+			private final java.util.HashSet<Label> seenLabels = new java.util.HashSet<Label>();
+
 			public ASMMethodVisitor(MethodVisitor visitor) {
 				super(visitor);
+			}
+
+			public void visitLabel(Label label) {
+				seenLabels.add(label);
+				super.visitLabel(label);
+			}
+
+			public void visitJumpInsn(int opcode, Label label) {
+				if (seenLabels.contains(label)) {
+					// CheerpJ runs Java threads cooperatively on the browser's main thread,
+					// so a `while (true) { frame(); }` that never blocks freezes the page.
+					// Give every loop a chance to let the browser in (see ThreadCompat.loop).
+					mv.visitMethodInsn(INVOKESTATIC, "org/recompile/mobile/ThreadCompat", "loop", "()V");
+				}
+				super.visitJumpInsn(opcode, label);
 			}
 
 			public void visitMethodInsn(int opcode, String owner, String name, String desc) {
