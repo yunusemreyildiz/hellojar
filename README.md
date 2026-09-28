@@ -34,7 +34,8 @@ Remember **Snake II**, **Asphalt**, **LOST** on a Nokia with a D-pad? **hellojar
 
 - **📱 A phone in your phone.** An N80-style 5-way navi key, soft keys and a 0–9 / * / # pad. You can slide your thumb across keys and press several at once, and Android vibrates on each press. Portrait puts the keys below the screen; landscape puts them on both sides.
 - **🗂 A real library.** Add any `.jar` (or a `.zip` with one inside). The screen size and key layout are guessed from the file (`LOST_NokiaN80` → 352×416, `K800i` → 240×320 Sony Ericsson…). Games and save data stay on your device.
-- **🔎 A catalog of 5,500+ games.** Search in Turkish or English without worrying about accents, filter by brand, and sort by popularity, date or name. Pick a game and hellojar opens its download page for the resolution that suits your screen; the downloaded file comes straight back into your library.
+- **▶ 1,300+ games in one tap.** Games preserved on the [Internet Archive](https://archive.org) load straight into your browser: no download, no ads, no file picking. The screen size comes from the file, its manifest or the archive's description, and you can change it from the in-game menu.
+- **🔎 A catalog of 5,800+ games.** Search in Turkish or English without worrying about accents, filter by brand, and sort by popularity, date or name. Games not on the archive open dedomil's download page for the resolution that suits your screen; the downloaded file comes straight back into your library.
 - **▶ One-tap games.** A handful of GPL-licensed titles (Abo, MilCity, Reversi) ship with the site and start instantly.
 - **⚡ Fixes old games that would otherwise freeze the page.** Many J2ME games busy-wait or spin in `while (true)` loops. That was fine on a phone, but it freezes a browser tab. hellojar patches their bytecode as they load (see [below](#how-it-works)).
 - **🌍 Türkçe / English.** Switch from the top-right corner or the in-game menu; your choice is remembered.
@@ -55,6 +56,7 @@ Remember **Snake II**, **Asphalt**, **LOST** on a Nokia with a D-pad? **hellojar
 - **Emulator:** [freej2me-web](https://github.com/zb3/freej2me-web) (FreeJ2ME, run in the browser by [CheerpJ](https://cheerpj.com/)).
 - **Why games crawled or froze:** CheerpJ runs every Java thread *cooperatively* on the browser's main thread. A Gameloft sound thread spinning on `Thread.yield()` ate ~100% CPU (LOST ran at ~1 fps). A game whose main loop never blocks froze the tab completely.
 - **The fix** lives in [`emulator/src`](emulator/src/org/recompile/mobile). Yields and zero-length sleeps become 1 ms sleeps, and every loop checks in with `ThreadCompat.loop()`, which gives the browser a turn after 25 ms without a break. Result: LOST went from ~1 → 14 fps (the game's own cap), with CPU dropping from 100% to ~15%.
+- **One-tap play:** [`tools/crawl_archive.py`](tools/crawl_archive.py) indexes J2ME jars on the Internet Archive. archive.org serves files *inside* a zip with CORS headers, so the player's browser fetches the jar directly from archive.org; nothing passes through hellojar.
 - **Catalog:** [`tools/crawl_dedomil.py`](tools/crawl_dedomil.py) builds a compact index of names, vendors, resolutions and 112 px WebP thumbnails from [dedomil.net](http://dedomil.net)'s public listings (adult titles filtered out). hellojar never hosts or proxies game files; downloads happen on dedomil's own pages.
 
 ## Run it yourself
@@ -73,6 +75,7 @@ It's a static site: serve `public/` from anything that supports HTTP `Range` req
 | Rebuild the emulator jar after editing `emulator/src` (needs a JDK) | `./tools/build_emulator.sh` |
 | Rebuild the one-tap catalog from `catalog/games.json` | `python3 tools/build_catalog.py` |
 | Refresh the dedomil catalog (resumable, polite) | `python3 tools/crawl_dedomil.py` |
+| Refresh the one-tap games from the Internet Archive, then merge | `python3 tools/crawl_archive.py && python3 tools/crawl_dedomil.py --build-only` |
 | Pin games to the top of *Popular* | edit `catalog/dedomil-featured.json`, then `python3 tools/crawl_dedomil.py --build-only` |
 
 <details>
@@ -102,6 +105,6 @@ It's a static site: serve `public/` from anything that supports HTTP `Range` req
 
 ## Credits
 
-[freej2me-web](https://github.com/zb3/freej2me-web) by zb3 (GPL-3.0) · [FreeJ2ME](https://github.com/hex007/freej2me) · [CheerpJ](https://cheerpj.com/) by Leaning Technologies · [dedomil.net](http://dedomil.net) for keeping the J2ME era alive · Abo, MilCity and Reversi by their respective authors (GPL).
+[freej2me-web](https://github.com/zb3/freej2me-web) by zb3 (GPL-3.0) · [FreeJ2ME](https://github.com/hex007/freej2me) · [CheerpJ](https://cheerpj.com/) by Leaning Technologies · [dedomil.net](http://dedomil.net) and the [Internet Archive](https://archive.org) for keeping the J2ME era alive · Abo, MilCity and Reversi by their respective authors (GPL).
 
 <p align="center"><sub>Built by <a href="https://yunolabz.xyz">YunoLabz</a> · <a href="https://hellojar.netlify.app"><b>hello</b>jar</a></sub></p>

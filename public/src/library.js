@@ -3,7 +3,7 @@
 import { listGames, getGame, saveGame, updateGame, removeGame, loadCatalog } from "./store.js";
 import { SCREEN_SIZES, PHONE_TYPES } from "./detect.js";
 import { initDirectory, pendingDownload, clearPending } from "./directory.js";
-import { unwrapJar } from "./zip.js";
+import { unwrapJar, guessScreenFromJar } from "./zip.js";
 import { t, tHtml, localized, applyI18n, initLangSwitch } from "./i18n.js";
 import {
     loadEmulator, analyseJar, install, readSettings, saveSettings,
@@ -174,7 +174,7 @@ let directoryStarted = false;
 function startDirectory() {
     if (directoryStarted) return;
     directoryStarted = true;
-    initDirectory({ onPick: hint => pickFile(hint) });
+    initDirectory({ onPick: hint => pickFile(hint), onPlay: (hint, urls) => playFromArchive(hint, urls) });
 }
 
 // back from dedomil (possibly after the browser reloaded this tab)
@@ -216,7 +216,8 @@ let busy = false;
 let pending = null;
 
 // hint: the directory game the player went to download ({ id, name, thumb, size })
-async function addFile(file, hint = null) {
+// auto: install straight away with the best guesses and start playing (one-tap play)
+async function addFile(file, hint = null, { auto = false, archive = null } = {}) {
     if (busy) return;
     closeSheets();
     $('#pending-bar').hidden = true;
@@ -255,6 +256,12 @@ async function addFile(file, hint = null) {
         $('#add-loading-text').textContent = t('add.analysing');
 
         pending = await analyseJar(buffer, fileName);
+        pending.archive = archive;
+        if (!pending.sizeDetected) {
+            // nothing in the name or manifest: look at the game's artwork
+            const guess = await guessScreenFromJar(buffer).catch(() => null);
+            if (guess && SCREEN_SIZES.includes(guess)) pending.size = guess;
+        }
         if (hint) {
             // the version they picked on dedomil, unless the jar itself says otherwise
             if (!pending.sizeDetected && hint.size && SCREEN_SIZES.includes(hint.size)) {
@@ -262,7 +269,23 @@ async function addFile(file, hint = null) {
                 pending.sizeDetected = true;
             }
             if (!pending.icon && hint.thumb) pending.icon = hint.thumb;
-            pending.dedomilId = hint.id;
+            pending.dedomilId = hint.id > 0 ? hint.id : null;
+            pending.hintName = hint.name;
+        }
+        if (auto) {
+            // nothing says what size it is: the most common one (changeable from the game menu)
+            if (!pending.sizeDetected) pending.size = '240x320';
+            if (pending.exists) {
+                // already installed under this id: just play it
+                busy = false;
+                clearPending();
+                if (!getGame(pending.appId)) saveGame(libraryEntry(pending.appId, pending, pending.size, pending.phone, null));
+                location.href = playUrl(pending.appId);
+                return;
+            }
+            $('#add-loading-text').textContent = t('add.installing');
+            await finishInstall({ size: pending.size, phone: pending.phone, mode: 'new' });
+            return;
         }
         showAddForm(pending);
     } catch (e) {
@@ -297,6 +320,31 @@ function showAddForm(p) {
     if (replace) replace.checked = true;
 }
 
+function libraryEntry(id, p, size, phone, previous) {
+    return {
+        ...(previous || {}),
+        id,
+        name: p.name + (id !== p.appId ? ` (${size})` : ''),
+        vendor: p.vendor || null,
+        icon: p.icon,
+        size, phone,
+        keypad: previous?.keypad || (TOUCH_SIZES.includes(size) ? 'none' : 'full'),
+        fileName: p.fileName,
+        dedomilId: p.dedomilId || previous?.dedomilId || null,
+        archive: p.archive || previous?.archive || null,
+        source: 'user',
+        addedAt: previous?.addedAt || Date.now(),
+    };
+}
+
+// installs `pending` and opens the game; throws on failure
+async function finishInstall({ size, phone, mode }) {
+    const id = await install(pending, { size, phone, mode });
+    saveGame(libraryEntry(id, pending, size, phone, getGame(id)));
+    clearPending();
+    location.href = playUrl(id);
+}
+
 $('#add-confirm').addEventListener('click', async () => {
     if (!pending || busy) return;
     busy = true;
@@ -305,27 +353,8 @@ $('#add-confirm').addEventListener('click', async () => {
     btn.textContent = t('add.adding');
 
     try {
-        const size = $('#add-size').value;
-        const phone = $('#add-phone').value;
         const mode = pending.exists ? document.querySelector('input[name="mode"]:checked').value : 'new';
-
-        const id = await install(pending, { size, phone, mode });
-        const previous = getGame(id);
-        saveGame({
-            ...(previous || {}),
-            id,
-            name: pending.name + (id !== pending.appId ? ` (${size})` : ''),
-            vendor: pending.vendor || null,
-            icon: pending.icon,
-            size, phone,
-            keypad: previous?.keypad || (TOUCH_SIZES.includes(size) ? 'none' : 'full'),
-            fileName: pending.fileName,
-            dedomilId: pending.dedomilId || previous?.dedomilId || null,
-            source: 'user',
-            addedAt: previous?.addedAt || Date.now(),
-        });
-        clearPending();
-        location.href = playUrl(id);
+        await finishInstall({ size: $('#add-size').value, phone: $('#add-phone').value, mode });
     } catch (e) {
         console.error(e);
         toast(t('add.failed'));
@@ -334,6 +363,72 @@ $('#add-confirm').addEventListener('click', async () => {
         busy = false;
     }
 });
+
+// ---------- one-tap play from archive.org ----------
+
+async function fetchWithProgress(url, onProgress) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const total = Number(res.headers.get('content-length')) || 0;
+    if (!res.body || !total) return res.arrayBuffer();
+    const reader = res.body.getReader();
+    const chunks = [];
+    let got = 0;
+    for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        got += value.length;
+        onProgress(Math.min(99, Math.round(got * 100 / total)));
+    }
+    const out = new Uint8Array(got);
+    let o = 0;
+    for (const c of chunks) { out.set(c, o); o += c.length; }
+    return out.buffer;
+}
+
+// sources: [{ url, screen }] — screen is the size archive.org's description names, if any
+async function playFromArchive(hint, sources) {
+    if (busy) return;
+
+    // installed before from the same file: open it right away
+    const known = listGames().find(g => g.archive && sources.some(src => src.url === g.archive));
+    if (known) {
+        location.href = playUrl(known.id);
+        return;
+    }
+
+    closeSheets();
+    busy = true;
+    openSheet('#add-sheet');
+    $('#add-loading').hidden = false;
+    $('#add-form').hidden = true;
+    $('#add-error').hidden = true;
+    const status = $('#add-loading-text');
+    status.textContent = t('add.fetching', { pct: '' });
+    warmUpEmulator();
+
+    let buffer = null, used = null;
+    for (const src of sources) {
+        try {
+            buffer = await fetchWithProgress(src.url, pct => { status.textContent = t('add.fetching', { pct: pct + '%' }); });
+            used = src;
+            break;
+        } catch (e) {
+            console.warn('archive.org source failed', src.url, e);
+        }
+    }
+    busy = false;
+    if (!buffer) {
+        $('#add-loading').hidden = true;
+        const box = $('#add-error');
+        box.hidden = false;
+        box.textContent = t('add.fetchFailed');
+        return;
+    }
+    const name = decodeURIComponent(used.url.split('/').pop()).split('/').pop() || 'game.jar';
+    await addFile(new File([buffer], name), { ...hint, size: used.screen || null }, { auto: true, archive: used.url });
+}
 
 // ---------- managing a game ----------
 

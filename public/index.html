@@ -78,6 +78,7 @@
                 <button class="chip" data-brand="4" aria-pressed="false">Samsung</button>
                 <button class="chip" data-brand="3" aria-pressed="false">Motorola</button>
                 <button class="chip" data-brand="8" aria-pressed="false">LG</button>
+                <button class="chip playable" id="dir-playable" aria-pressed="false" data-i18n="dir.playable">▶ Hemen oynanabilir</button>
             </div>
 
             <p id="dir-count" class="muted small"></p>
@@ -141,6 +142,12 @@
                     <h2 id="dir-title"></h2>
                     <p id="dir-meta" class="muted"></p>
                 </div>
+            </div>
+
+            <div id="dir-play-block" hidden>
+                <button class="btn primary wide" id="dir-play" data-i18n="dir.playNow">▶ Hemen oyna</button>
+                <p class="muted small" data-i18n="dir.playHint">Oyun archive.org'dan doğrudan tarayıcına yüklenir. İndirme, reklam, dosya seçme yok.</p>
+                <p class="or-line" id="dir-or" data-i18n="dir.otherVersion">Başka bir sürüm mü lazım? Dedomil'den indir:</p>
             </div>
 
             <div id="dir-step1">

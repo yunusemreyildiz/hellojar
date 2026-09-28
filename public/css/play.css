@@ -353,3 +353,4 @@ body.kp-none .float-menu { display: flex; }
 }
 #menu button span[id] { color: var(--accent); }
 #menu button.primary { background: var(--accent); color: #1a1206; font-weight: 700; text-align: center; margin-top: 4px; }
+

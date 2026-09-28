@@ -33,7 +33,8 @@ Nokia'da yön tuşuyla oynadığın **Yılan**, **Asphalt**, **LOST**'u hatırl�
 
 - **📱 Telefonun içinde telefon.** N80 tarzı 5 yönlü tuş, seçim tuşları ve 0–9 / * / # tuşları var. Parmağını tuştan tuşa kaydırabilir, aynı anda birden fazla tuşa basabilirsin; Android'de her basışta titreşim var. Dikeyde tuşlar ekranın altında, yatayda iki yanda duruyor.
 - **🗂 Gerçek bir kütüphane.** İstediğin `.jar` dosyasını (ya da içinde jar olan bir `.zip`'i) ekleyebilirsin. Ekran boyutu ve tuş düzeni dosyadan tahmin ediliyor (`LOST_NokiaN80` → 352×416, `K800i` → 240×320 Sony Ericsson…). Oyunlar ve kayıtlar cihazında kalıyor.
-- **🔎 5.500+ oyunluk katalog.** Türkçe karakterler fark etmeden arama, marka filtresi, popülerlik/tarih/isim sıralaması var. Oyunu seçince hellojar, ekranına en uygun çözünürlüğün indirme sayfasını açıyor; indirdiğin dosya doğrudan kütüphanene ekleniyor.
+- **▶ Tek dokunuşla 1.300+ oyun.** [Internet Archive](https://archive.org)'da korunan oyunlar doğrudan tarayıcına yüklenir: indirme, reklam, dosya seçme yok. Ekran boyutu dosyadan, manifestten ya da arşivin açıklamasından alınır; oyun menüsünden değiştirilebilir.
+- **🔎 5.800+ oyunluk katalog.** Türkçe karakterler fark etmeden arama, marka filtresi, popülerlik/tarih/isim sıralaması var. Arşivde olmayan oyunlarda hellojar, ekranına en uygun çözünürlüğün dedomil indirme sayfasını açıyor; indirdiğin dosya doğrudan kütüphanene ekleniyor.
 - **▶ Tek dokunuşla oyunlar.** GPL lisanslı birkaç oyun (Abo, MilCity, Reversi) sitenin içinde geliyor, anında açılıyor.
 - **⚡ Donmayı önleyen yama.** Pek çok J2ME oyunu meşgul bekleme yapıyor ya da `while (true)` döngülerinde dönüyor. Telefonda sorun değildi, ama tarayıcı sekmesini donduruyor. hellojar bu oyunların kodunu yüklenirken yamalıyor ([aşağıda](#nasıl-çalışıyor)).
 - **🌍 Türkçe / English.** Sağ üstten ya da oyun menüsünden dil değiştirilebiliyor; seçim hatırlanıyor.
@@ -54,6 +55,7 @@ Nokia'da yön tuşuyla oynadığın **Yılan**, **Asphalt**, **LOST**'u hatırl�
 - **Emülatör:** [freej2me-web](https://github.com/zb3/freej2me-web) (FreeJ2ME; [CheerpJ](https://cheerpj.com/) ile tarayıcıda çalışıyor).
 - **Oyunlar neden takılıyor ya da donuyordu:** CheerpJ tüm Java iş parçacıklarını tarayıcının tek iş parçacığında sırayla çalıştırıyor. Gameloft'un ses iş parçacığı `Thread.yield()` içinde dönüp işlemcinin ~%100'ünü yiyordu (LOST ~1 fps'e düşmüştü). Ana döngüsü hiç durmayan oyunlar ise sekmeyi tamamen donduruyordu.
 - **Çözüm** [`emulator/src`](emulator/src/org/recompile/mobile) içinde. `yield` ve sıfır süreli `sleep` çağrıları 1 ms'lik uykuya dönüşüyor. Her döngü `ThreadCompat.loop()`'a uğruyor; bir oyun 25 ms aralıksız çalışırsa tarayıcıya sıra veriliyor. Sonuç: LOST ~1'den 14 fps'e çıktı (oyunun kendi sınırı), işlemci kullanımı %100'den ~%15'e indi.
+- **Tek dokunuşla oynama:** [`tools/crawl_archive.py`](tools/crawl_archive.py), Internet Archive'daki J2ME jar'larını listeler. archive.org zip *içindeki* dosyaları CORS izniyle sunduğu için jar, oyuncunun tarayıcısına doğrudan archive.org'dan iner; hellojar'dan hiçbir dosya geçmez.
 - **Katalog:** [`tools/crawl_dedomil.py`](tools/crawl_dedomil.py), [dedomil.net](http://dedomil.net)'in herkese açık listelerinden oyun adları, üreticiler, çözünürlükler ve 112 px WebP görsellerle küçük bir dizin oluşturuyor (yetişkin içerikler çıkarılıyor). hellojar oyun dosyası barındırmıyor ve aktarmıyor; indirme dedomil'in kendi sayfasında yapılıyor.
 
 ## Kendin çalıştır
@@ -72,6 +74,7 @@ Statik bir site: `public/` klasörünü HTTP `Range` isteklerini destekleyen her
 | `emulator/src` değişince emülatör jar'ını yeniden derle (JDK gerekir) | `./tools/build_emulator.sh` |
 | `catalog/games.json`'dan tek dokunuşluk oyunları yeniden üret | `python3 tools/build_catalog.py` |
 | Dedomil kataloğunu güncelle (kaldığı yerden devam eder) | `python3 tools/crawl_dedomil.py` |
+| Internet Archive oyunlarını güncelle ve birleştir | `python3 tools/crawl_archive.py && python3 tools/crawl_dedomil.py --build-only` |
 | Oyunları *Popüler*'in en üstüne sabitle | `catalog/dedomil-featured.json`'u düzenle, sonra `python3 tools/crawl_dedomil.py --build-only` |
 
 <details>
@@ -101,6 +104,6 @@ Statik bir site: `public/` klasörünü HTTP `Range` isteklerini destekleyen her
 
 ## Teşekkürler
 
-zb3'ün [freej2me-web](https://github.com/zb3/freej2me-web)'i (GPL-3.0) · [FreeJ2ME](https://github.com/hex007/freej2me) · Leaning Technologies'in [CheerpJ](https://cheerpj.com/)'si · J2ME dönemini yaşattığı için [dedomil.net](http://dedomil.net) · Abo, MilCity ve Reversi'nin yazarları (GPL).
+zb3'ün [freej2me-web](https://github.com/zb3/freej2me-web)'i (GPL-3.0) · [FreeJ2ME](https://github.com/hex007/freej2me) · Leaning Technologies'in [CheerpJ](https://cheerpj.com/)'si · J2ME dönemini yaşattıkları için [dedomil.net](http://dedomil.net) ve [Internet Archive](https://archive.org) · Abo, MilCity ve Reversi'nin yazarları (GPL).
 
 <p align="center"><sub><a href="https://yunolabz.xyz">YunoLabz</a> yapımı · <a href="https://hellojar.netlify.app"><b>hello</b>jar</a></sub></p>

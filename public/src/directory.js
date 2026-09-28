@@ -12,11 +12,15 @@ const PREFERRED = ['240x320', '352x416', '240x400', '360x640', '176x220', '176x2
 
 const $ = sel => document.querySelector(sel);
 
-let data = null;          // { vendors, games: [[id, name, vendor, dl, added, brands, res, thumb]] }
+// { vendors, sources, games: [[id, name, vendor, dl, added, brands, res, thumb, sources, (search key)]] }
+// id > 0: a dedomil game; id < 0: only on archive.org. thumb: 1 = ours, or a URL
+let data = null;
 let loading = null;
 let results = [];
 let shown = 0;
 let brand = '';
+let playableOnly = false;
+let onPlay = () => {};
 let onPick = () => {};
 
 // "Çılgın Kuşlar" and "cilgin kuslar" should match
@@ -48,7 +52,19 @@ export function dedomilUrl(id, sid) {
 }
 
 function thumbUrl(g) {
+    if (typeof g[7] === 'string') return g[7];
     return g[7] ? `dd/t/${g[0]}.webp` : null;
+}
+
+const SEARCH = 9;
+
+function sourcesOf(g) {
+    return (g[8] || []).map(i => data.sources[i]).filter(Boolean);
+}
+
+// archive.org serves files inside a zip with CORS headers
+export function archiveUrl([item, zip, path]) {  // (a 4th element, the screen size, is ignored here)
+    return `https://archive.org/download/${item}/${encodeURIComponent(zip)}/${encodeURIComponent(path)}`;
 }
 
 async function load() {
@@ -57,7 +73,11 @@ async function load() {
             .then(r => (r.ok ? r.json() : null))
             .then(doc => {
                 if (!doc) return null;
-                for (const g of doc.games) g.push(fold(g[1] + ' ' + (doc.vendors[g[2]] || '')));
+                for (const g of doc.games) {
+                    if (!g[8]) g[8] = [];
+                    g[SEARCH] = fold(g[1] + ' ' + (doc.vendors[g[2]] || ''));
+                }
+                doc.sources = doc.sources || [];
                 data = doc;
                 return doc;
             })
@@ -73,7 +93,8 @@ function applyFilters() {
 
     results = data.games.filter(g =>
         (!brand || (g[5] & (1 << Number(brand)))) &&
-        words.every(w => g[8].includes(w)));
+        (!playableOnly || g[8].length > 0) &&
+        words.every(w => g[SEARCH].includes(w)));
 
     if (sort === 'pop') {
         // our picks first, in the order listed
@@ -120,6 +141,14 @@ function card(g) {
         el.appendChild(star);
     }
 
+    if (g[8].length) {
+        const play = document.createElement('span');
+        play.className = 'playable-badge';
+        play.textContent = '▶';
+        play.title = t('dir.playableTitle');
+        el.appendChild(play);
+    }
+
     const name = document.createElement('span');
     name.className = 'n';
     name.textContent = g[1];
@@ -148,11 +177,16 @@ function openGame(id) {
     const g = data.games.find(x => x[0] === id);
     if (!g) return;
     const options = bestRes(parseRes(g[6]));
-    current = { id: g[0], name: g[1], vendor: data.vendors[g[2]] || '', thumb: thumbUrl(g), options };
+    current = { id: g[0], name: g[1], vendor: data.vendors[g[2]] || '', thumb: thumbUrl(g), options, sources: sourcesOf(g) };
 
     $('#dir-thumb').src = current.thumb || 'icons/icon-192.png';
     $('#dir-title').textContent = current.name;
-    $('#dir-meta').textContent = [current.vendor, t('dir.downloads', { count: num(g[3]) })].filter(Boolean).join(' · ');
+    $('#dir-meta').textContent = [current.vendor, g[3] ? t('dir.downloads', { count: num(g[3]) }) : ''].filter(Boolean).join(' · ');
+
+    // one tap from archive.org when we can; dedomil (if listed there) as the fallback
+    const onDedomil = current.id > 0 && options.length > 0;
+    $('#dir-play-block').hidden = current.sources.length === 0;
+    $('#dir-or').hidden = !onDedomil;
 
     const sel = $('#dir-res');
     sel.innerHTML = '';
@@ -165,7 +199,7 @@ function openGame(id) {
     sel.onchange = () => { $('#dir-rec-badge').hidden = sel.value !== '0'; };
     $('#dir-rec-badge').hidden = false;
 
-    $('#dir-step1').hidden = false;
+    $('#dir-step1').hidden = !onDedomil;
     $('#dir-step2').hidden = true;
     $('#dir-sheet').hidden = false;
 }
@@ -201,6 +235,7 @@ export function clearPending() {
 
 export async function initDirectory(opts) {
     onPick = opts.onPick;
+    onPlay = opts.onPlay;
 
     const doc = await load();
     if (!doc) {
@@ -236,6 +271,16 @@ export async function initDirectory(opts) {
     }, { rootMargin: '600px' }).observe($('#dir-more'));
 
     $('#dir-go').addEventListener('click', goToDedomil);
+    $('#dir-play').addEventListener('click', () => {
+        if (!current?.sources.length) return;
+        onPlay({ id: current.id, name: current.name, thumb: current.thumb, vendor: current.vendor },
+            current.sources.map(src => ({ url: archiveUrl(src), screen: src[3] || null })));
+    });
+    $('#dir-playable').addEventListener('click', e => {
+        playableOnly = !playableOnly;
+        e.currentTarget.setAttribute('aria-pressed', String(playableOnly));
+        applyFilters();
+    });
     $('#dir-again').addEventListener('click', () => {
         const opt = chosen();
         window.open(dedomilUrl(current.id, opt?.sid), '_blank', 'noopener');

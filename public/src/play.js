@@ -249,6 +249,7 @@ function syncMenuLabels() {
     document.getElementById('haptics-state').textContent = haptics ? t('play.on') : t('play.off');
     document.getElementById('keypad-state').textContent = t(KEYPAD_LABELS[keypadMode]);
     document.getElementById('lang-state').textContent = getLang() === 'tr' ? 'Türkçe' : 'English';
+    document.getElementById('size-state').textContent = currentSize();
     for (const m of KEYPAD_MODES) document.body.classList.toggle('kp-' + m, m === keypadMode);
     const fsBtn = menuEl.querySelector('[data-menu="fullscreen"]');
     const canFs = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
@@ -300,6 +301,11 @@ function initMenu() {
                 break;
             case 'library': location.href = './'; break;
             case 'lang': setLang(getLang() === 'tr' ? 'en' : 'tr'); syncMenuLabels(); break;
+            case 'size': {
+                const i = MENU_SIZES.indexOf(currentSize());
+                setScreenSize(MENU_SIZES[(i + 1) % MENU_SIZES.length]);
+                break;
+            }
             case 'emu': closeMenu(); tapKey('Escape'); break;
             case 'reload': location.reload(); break;
             case 'close': closeMenu(); break;
@@ -368,6 +374,32 @@ function showGameInfo(info) {
         display.height = h;
         autoscale();
     }
+}
+
+// ---------- screen size from the menu ----------
+// When a game was added without a known resolution it may look cut off or
+// tiny; the menu cycles through the common sizes and restarts the game.
+
+const MENU_SIZES = ['240x320', '176x208', '176x220', '128x160', '352x416', '320x240',
+    '240x400', '360x640', '640x360', '208x208', '128x128'];
+
+let javaLib = null;
+
+async function setScreenSize(size) {
+    if (!javaLib) return;
+    const [width, height] = size.split('x');
+    const launcherUtil = await javaLib.pl.zb3.freej2me.launcher.LauncherUtil;
+    const HashMap = await javaLib.java.util.HashMap;
+    const map = await new HashMap();
+    await map.put('width', width);
+    await map.put('height', height);
+    await launcherUtil.saveApp(APP_ID, map, null, null);
+    updateGame(APP_ID, { size, keypad: TOUCH_SIZES.includes(size) ? 'none' : 'full' });
+    location.reload();
+}
+
+function currentSize() {
+    return `${display.width}x${display.height}`;
 }
 
 function fail(message) {
@@ -462,6 +494,7 @@ async function init() {
 
     setStatus(t('play.loadingEmu'), 45);
     const lib = await cheerpjRunLibrary(cheerpjWebRoot + "/freej2me-web.jar");
+    javaLib = lib;
     const FreeJ2ME = await lib.org.recompile.freej2me.FreeJ2ME;
 
     setStatus(t('play.preparingGame'), 65);

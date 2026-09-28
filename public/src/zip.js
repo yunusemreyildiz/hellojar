@@ -62,3 +62,56 @@ export async function unwrapJar(buffer) {
     const jar = jars.sort((a, b) => b.size - a.size)[0];
     return { buffer: await extract(buffer, jar), name: jar.name.split('/').pop() };
 }
+
+// ---------- screen size from a jar's artwork ----------
+
+const PNG_SIG = [0x89, 0x50, 0x4e, 0x47];
+
+// typical full-screen widths and the height each implies
+const SCREENS = {
+    128: ['128x160', '128x128'], 132: ['132x176'], 176: ['176x208', '176x220'],
+    208: ['208x208'], 240: ['240x320', '240x400'], 320: ['320x240'],
+    352: ['352x416'], 360: ['360x640'],
+};
+
+/**
+ * Guesses a game's screen size from its images: backgrounds and splash
+ * screens are usually exactly as wide as the screen. Returns e.g. '240x320',
+ * or null when the artwork doesn't say.
+ */
+export async function guessScreenFromJar(buffer) {
+    // images may be plain .png files or packed inside the game's own data
+    // files (Gameloft does this), so look for PNG headers in any resource
+    const entries = listEntries(buffer).filter(e => !/\.class$/i.test(e.name) && !e.name.endsWith('/') && e.size > 200);
+    entries.sort((a, b) => b.size - a.size);
+    const dims = [];
+    for (const e of entries.slice(0, 40)) {
+        try {
+            const bytes = new Uint8Array(await extract(buffer, e));
+            const v = new DataView(bytes.buffer, bytes.byteOffset);
+            for (let i = 0; i + 24 <= bytes.length && dims.length < 400; i++) {
+                if (bytes[i] === 0x89 && PNG_SIG.every((b, k) => bytes[i + k] === b) &&
+                    bytes[i + 12] === 0x49 && bytes[i + 13] === 0x48) { // "IH"DR
+                    dims.push([v.getUint32(i + 16), v.getUint32(i + 20)]);
+                    i += 24;
+                }
+            }
+        } catch {}
+    }
+
+    const score = {};
+    const heights = new Set(dims.map(d => d[1]));
+    for (const [w, h] of dims) {
+        if (SCREENS[w] && h >= w * 0.4) score[w] = (score[w] || 0) + w * h;
+    }
+    const best = Object.entries(score).sort((a, b) => b[1] - a[1])[0];
+    if (!best) return null;
+
+    const [primary, alternative] = SCREENS[best[0]];
+    if (alternative) {
+        const altH = Number(alternative.split('x')[1]);
+        const priH = Number(primary.split('x')[1]);
+        if (heights.has(altH) && !heights.has(priH)) return alternative;
+    }
+    return primary;
+}

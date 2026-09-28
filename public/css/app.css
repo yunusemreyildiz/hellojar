@@ -308,6 +308,25 @@ button.chip { cursor: pointer; }
 .dir-card:active { transform: scale(.97); }
 .dir-card { position: relative; }
 .dir-card.featured { border-color: rgba(224, 160, 64, .55); }
+.dir-card .playable-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--hello);
+    color: #06222b;
+    font-size: 10px;
+    padding-left: 2px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.5);
+}
+.chip.playable[aria-pressed="true"] { background: var(--hello); border-color: var(--hello); color: #06222b; }
+.or-line { margin: 18px 0 -4px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+#dir-play-block + #dir-step1 .btn.wide { background: var(--key); color: var(--text); }
+#dir-play { background: var(--hello); color: #06222b; }
 .dir-card .star {
     position: absolute;
     top: 12px;

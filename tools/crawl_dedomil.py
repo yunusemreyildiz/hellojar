@@ -225,6 +225,41 @@ ADULT = re.compile(r"\b(sex\w*|xxx|porn\w*|erotic\w*|nude|naked|strip (club|poke
                    r"calendar girls?|pin[- ]?up|milf|seduc\w*)\b", re.I)
 
 
+def fold(s):
+    """Same idea as fold() in public/src/directory.js: case/accent/punctuation-free."""
+    import unicodedata
+    s = unicodedata.normalize("NFD", s.lower().replace("ı", "i"))
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r"[^a-z0-9]+", " ", s).strip()
+
+
+def match_key(name):
+    # "Prince of Persia (2008)" / "The Prince of Persia" / "Prince-of-Persia 3D" -> "princeofpersia3d"
+    name = re.sub(r"\([^)]*\)", "", name)
+    words = [w for w in fold(name).split() if w not in ("the", "mobile", "java", "game")]
+    return "".join(words)
+
+
+RES_TOKEN = re.compile(r"(\d{3})\s*[x×]\s*(\d{3})", re.I)
+
+
+def pack_name(path):
+    # "828 Java Games/Asphalt3_240x320.jar" -> "Asphalt3"
+    base = path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+    base = RES_TOKEN.sub(" ", base)
+    base = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", base)
+    return re.sub(r"[_\-.]+", " ", base).strip()
+
+
+def archive_sources():
+    """Playable-in-browser jars from tools/crawl_archive.py, keyed for matching."""
+    path = ROOT / "catalog" / "archive-index.json"
+    if not path.exists():
+        return [], []
+    index = json.loads(path.read_text())
+    return index.get("games", []), index.get("packs", [])
+
+
 def build(games, details):
     vendors, rows = [], []
     vendor_idx = {}
@@ -243,6 +278,49 @@ def build(games, details):
             g["id"], g["name"], vendor_idx[v], d.get("dl", 0), g.get("added", ""),
             cats, " ".join(f"{r}:{sid}" for r, sid in d["res"]), 1 if (THUMBS / f"{g['id']}.webp").exists() else 0,
         ])
+    # ---- one-tap sources from the Internet Archive ----
+    ia_games, ia_packs = archive_sources()
+    sources = []          # [item, zip, path, (screen size if known)]
+    by_key = {}
+    for r in rows:
+        by_key.setdefault(match_key(r[1]), r)
+
+    def add_source(row, item, zip_name, inner, screen=None):
+        sources.append([item, zip_name, inner] + ([screen] if screen else []))
+        row[8].append(len(sources) - 1)
+
+    for r in rows:
+        r.append([])  # [8]: indexes into "sources"
+
+    extra = 0
+    for g in ia_games:
+        if ADULT.search(g["name"]):
+            continue
+        row = by_key.get(match_key(g["name"]))
+        if row is None:
+            # not on dedomil: list it anyway, it's playable
+            v = g.get("vendor") or ""
+            if v not in vendor_idx:
+                vendor_idx[v] = len(vendors)
+                vendors.append(v)
+            extra += 1
+            icon = (f"https://archive.org/download/{g['item']}/{urllib.parse.quote(g['icon'])}"
+                    if g.get("icon") else f"https://archive.org/services/img/{g['item']}")
+            row = [-extra, g["name"], vendor_idx[v], int(g.get("downloads") or 0), "", 0, "", icon, []]
+            rows.append(row)
+            by_key[match_key(g["name"])] = row
+        add_source(row, g["item"], g["zip"], g["path"], g.get("screen"))
+
+    matched_packs = 0
+    for j in ia_packs:
+        row = by_key.get(match_key(pack_name(j["path"])))
+        if row is not None and row[0] > 0 and len(row[8]) < 4:
+            add_source(row, j["item"], j["zip"], j["path"])
+            matched_packs += 1
+
+    playable = sum(1 for r in rows if r[8])
+    log(f"archive.org: {playable} playable in one tap ({extra} not on dedomil, {matched_packs} pack jars matched)")
+
     rows.sort(key=lambda r: -r[3])
     OUT.mkdir(parents=True, exist_ok=True)
     featured_path = ROOT / "catalog" / "dedomil-featured.json"
@@ -251,7 +329,8 @@ def build(games, details):
         "source": "dedomil.net",
         "featured": [i for i in featured if any(r[0] == i for r in rows)],
         "updated": time.strftime("%Y-%m-%d"),
-        "fields": ["id", "name", "vendor", "downloads", "added", "brands", "resolutions", "thumb"],
+        "fields": ["id", "name", "vendor", "downloads", "added", "brands", "resolutions", "thumb", "sources"],
+        "sources": sources,
         "brands": {str(k): v for k, v in CATEGORIES.items()},
         "vendors": vendors,
         "games": rows,
