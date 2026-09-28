@@ -322,6 +322,16 @@ button.chip { cursor: pointer; }
 
 .thumb { width: 56px; height: 56px; border-radius: 11px; object-fit: cover; background: var(--surface-2); flex: none; }
 .thumb.big { width: 76px; height: 76px; }
+.ad-note {
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(224, 160, 64, .09);
+    border: 1px solid rgba(224, 160, 64, .25);
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+.ad-note::before { content: "ⓘ "; color: var(--accent); font-weight: 700; }
 .btn.wide { width: 100%; margin-top: 16px; padding: 14px; font-size: 16px; }
 .row.between { justify-content: space-between; margin-top: 12px; }
 .steps.compact { margin-top: 16px; }
