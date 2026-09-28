@@ -29,7 +29,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "catalog" / "archive-cache"
 OUT = ROOT / "catalog" / "archive-index.json"
 
-UA = "hellojar-directory/1.0 (+https://hellojar.netlify.app)"
+UA = "hellojar-directory/1.0 (+https://hellojar.yunolabz.xyz)"
 WORKERS = 3
 PAUSE = 0.3
 

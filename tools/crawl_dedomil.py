@@ -38,7 +38,7 @@ OUT = ROOT / "public" / "dd"
 THUMBS = OUT / "t"
 
 BASE = "http://dedomil.net"
-UA = "hellojar-directory/1.0 (+https://hellojar.netlify.app; links back to dedomil)"
+UA = "hellojar-directory/1.0 (+https://hellojar.yunolabz.xyz; links back to dedomil)"
 WORKERS = 3
 PAUSE = 0.35  # seconds each worker waits after a request
 
