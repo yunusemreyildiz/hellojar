@@ -1,9 +1,9 @@
 <p align="center">
-  <a href="https://hellojar.netlify.app"><img src="docs/banner.png" alt="hellojar — eski cep oyunları, tarayıcında" width="100%"></a>
+  <a href="https://hellojar.yunolabz.xyz"><img src="docs/banner.png" alt="hellojar — eski cep oyunları, tarayıcında" width="100%"></a>
 </p>
 
 <p align="center">
-  <a href="https://hellojar.netlify.app"><b>▶ Hemen oyna</b></a>
+  <a href="https://hellojar.yunolabz.xyz"><b>▶ Hemen oyna</b></a>
   &nbsp;·&nbsp;
   <a href="#özellikler">Özellikler</a>
   &nbsp;·&nbsp;
@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="https://hellojar.netlify.app"><img alt="Yayında" src="https://img.shields.io/badge/yay%C4%B1nda-hellojar.netlify.app-e0a040?style=flat-square"></a>
+  <a href="https://hellojar.yunolabz.xyz"><img alt="Yayında" src="https://img.shields.io/badge/yay%C4%B1nda-hellojar.yunolabz.xyz-e0a040?style=flat-square"></a>
   <img alt="J2ME" src="https://img.shields.io/badge/J2ME-MIDP_2.0-5ec8e5?style=flat-square">
   <img alt="PWA" src="https://img.shields.io/badge/PWA-y%C3%BCklenebilir-2b3038?style=flat-square">
   <a href="LICENSE-freej2me"><img alt="GPL-3.0 emülatör" src="https://img.shields.io/badge/em%C3%BClat%C3%B6r-GPL--3.0-2b3038?style=flat-square"></a>
@@ -107,4 +107,4 @@ Statik bir site: `public/` klasörünü HTTP `Range` isteklerini destekleyen her
 
 zb3'ün [freej2me-web](https://github.com/zb3/freej2me-web)'i (GPL-3.0) · [FreeJ2ME](https://github.com/hex007/freej2me) · Leaning Technologies'in [CheerpJ](https://cheerpj.com/)'si · J2ME dönemini yaşattıkları için [dedomil.net](http://dedomil.net) ve [Internet Archive](https://archive.org) · Abo, MilCity ve Reversi'nin yazarları (GPL).
 
-<p align="center"><sub><a href="https://yunolabz.xyz">YunoLabz</a> yapımı · <a href="https://hellojar.netlify.app"><b>hello</b>jar</a></sub></p>
+<p align="center"><sub><a href="https://yunolabz.xyz">YunoLabz</a> yapımı · <a href="https://hellojar.yunolabz.xyz"><b>hello</b>jar</a></sub></p>

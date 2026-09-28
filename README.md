@@ -1,9 +1,9 @@
 <p align="center">
-  <a href="https://hellojar.netlify.app"><img src="docs/banner.png" alt="hellojar — old keypad-phone games, right in your browser" width="100%"></a>
+  <a href="https://hellojar.yunolabz.xyz"><img src="docs/banner.png" alt="hellojar — old keypad-phone games, right in your browser" width="100%"></a>
 </p>
 
 <p align="center">
-  <a href="https://hellojar.netlify.app"><b>▶ Play now</b></a>
+  <a href="https://hellojar.yunolabz.xyz"><b>▶ Play now</b></a>
   &nbsp;·&nbsp;
   <a href="#features">Features</a>
   &nbsp;·&nbsp;
@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="https://hellojar.netlify.app"><img alt="Live" src="https://img.shields.io/badge/live-hellojar.netlify.app-e0a040?style=flat-square"></a>
+  <a href="https://hellojar.yunolabz.xyz"><img alt="Live" src="https://img.shields.io/badge/live-hellojar.yunolabz.xyz-e0a040?style=flat-square"></a>
   <img alt="J2ME" src="https://img.shields.io/badge/J2ME-MIDP_2.0-5ec8e5?style=flat-square">
   <img alt="PWA" src="https://img.shields.io/badge/PWA-installable-2b3038?style=flat-square">
   <img alt="No build step" src="https://img.shields.io/badge/build-none-2b3038?style=flat-square">
@@ -108,4 +108,4 @@ It's a static site: serve `public/` from anything that supports HTTP `Range` req
 
 [freej2me-web](https://github.com/zb3/freej2me-web) by zb3 (GPL-3.0) · [FreeJ2ME](https://github.com/hex007/freej2me) · [CheerpJ](https://cheerpj.com/) by Leaning Technologies · [dedomil.net](http://dedomil.net) and the [Internet Archive](https://archive.org) for keeping the J2ME era alive · Abo, MilCity and Reversi by their respective authors (GPL).
 
-<p align="center"><sub>Built by <a href="https://yunolabz.xyz">YunoLabz</a> · <a href="https://hellojar.netlify.app"><b>hello</b>jar</a></sub></p>
+<p align="center"><sub>Built by <a href="https://yunolabz.xyz">YunoLabz</a> · <a href="https://hellojar.yunolabz.xyz"><b>hello</b>jar</a></sub></p>
