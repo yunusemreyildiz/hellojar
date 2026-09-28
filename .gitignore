@@ -5,3 +5,6 @@ node_modules/
 game/
 public/apps/catalog.local.json
 public/apps/lost.*
+
+# netlify cli state
+.netlify/
