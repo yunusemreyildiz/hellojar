@@ -1,0 +1,226 @@
+// The game directory on the Discover tab: every J2ME game listed on dedomil.net
+// (built by tools/crawl_dedomil.py). We only show names/thumbnails and send the
+// player to dedomil's download page; the jar comes back through the add flow.
+
+const PAGE = 48;
+
+// resolutions that look and play best here, most preferred first
+const PREFERRED = ['240x320', '352x416', '240x400', '360x640', '176x220', '176x208',
+    '320x240', '208x208', '240x432', '128x160', '128x128'];
+
+const $ = sel => document.querySelector(sel);
+
+let data = null;          // { vendors, games: [[id, name, vendor, dl, added, brands, res, thumb]] }
+let loading = null;
+let results = [];
+let shown = 0;
+let brand = '';
+let onPick = () => {};
+
+// "Çılgın Kuşlar" and "cilgin kuslar" should match
+export function fold(s) {
+    return s.toLocaleLowerCase('tr')
+        .replace(/ı/g, 'i')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+}
+
+function parseRes(str) {
+    return str.split(' ').filter(Boolean).map(pair => {
+        const [res, sid] = pair.split(':');
+        return { res, sid: Number(sid) };
+    });
+}
+
+export function bestRes(list) {
+    const rank = r => {
+        const i = PREFERRED.indexOf(r.res);
+        return i === -1 ? PREFERRED.length : i;
+    };
+    return [...list].sort((a, b) => rank(a) - rank(b));
+}
+
+export function dedomilUrl(id, sid) {
+    return sid ? `http://dedomil.net/games/${id}/screen/${sid}` : `http://dedomil.net/games/${id}/screens`;
+}
+
+function thumbUrl(g) {
+    return g[7] ? `dd/t/${g[0]}.webp` : null;
+}
+
+async function load() {
+    if (!loading) {
+        loading = fetch('dd/games.json')
+            .then(r => (r.ok ? r.json() : null))
+            .then(doc => {
+                if (!doc) return null;
+                for (const g of doc.games) g.push(fold(g[1] + ' ' + (doc.vendors[g[2]] || '')));
+                data = doc;
+                return doc;
+            })
+            .catch(() => null);
+    }
+    return loading;
+}
+
+function applyFilters() {
+    const q = fold($('#dir-q').value);
+    const sort = $('#dir-sort').value;
+    const words = q ? q.split(' ') : [];
+
+    results = data.games.filter(g =>
+        (!brand || (g[5] & (1 << Number(brand)))) &&
+        words.every(w => g[8].includes(w)));
+
+    if (sort === 'new') results.sort((a, b) => (b[4] > a[4] ? 1 : b[4] < a[4] ? -1 : 0));
+    else if (sort === 'az') results.sort((a, b) => a[1].localeCompare(b[1], 'tr'));
+    // "pop" is the file's own order
+
+    shown = 0;
+    $('#dir-grid').innerHTML = '';
+    $('#dir-count').textContent = `${results.length.toLocaleString('tr')} oyun`;
+    $('#dir-empty').hidden = results.length > 0;
+    renderMore();
+}
+
+function card(g) {
+    const el = document.createElement('button');
+    el.className = 'dir-card';
+    el.dataset.id = g[0];
+
+    const src = thumbUrl(g);
+    if (src) {
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.alt = '';
+        img.src = src;
+        el.appendChild(img);
+    } else {
+        const ph = document.createElement('div');
+        ph.className = 'ph';
+        ph.textContent = g[1].charAt(0).toUpperCase();
+        el.appendChild(ph);
+    }
+
+    const name = document.createElement('span');
+    name.className = 'n';
+    name.textContent = g[1];
+    const vendor = document.createElement('span');
+    vendor.className = 'v';
+    vendor.textContent = data.vendors[g[2]] || '';
+    el.append(name, vendor);
+    return el;
+}
+
+function renderMore() {
+    const grid = $('#dir-grid');
+    const next = results.slice(shown, shown + PAGE);
+    const frag = document.createDocumentFragment();
+    for (const g of next) frag.appendChild(card(g));
+    grid.appendChild(frag);
+    shown += next.length;
+    $('#dir-more').hidden = shown >= results.length;
+}
+
+// ---------- game sheet ----------
+
+let current = null;
+
+function openGame(id) {
+    const g = data.games.find(x => x[0] === id);
+    if (!g) return;
+    const options = bestRes(parseRes(g[6]));
+    current = { id: g[0], name: g[1], vendor: data.vendors[g[2]] || '', thumb: thumbUrl(g), options };
+
+    $('#dir-thumb').src = current.thumb || 'icons/icon-192.png';
+    $('#dir-title').textContent = current.name;
+    $('#dir-meta').textContent = [current.vendor, `${g[3].toLocaleString('tr')} indirme`].filter(Boolean).join(' · ');
+
+    const sel = $('#dir-res');
+    sel.innerHTML = '';
+    options.forEach((o, i) => {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = o.res + (i === 0 ? ' (önerilen)' : '');
+        sel.appendChild(opt);
+    });
+    sel.onchange = () => { $('#dir-rec-badge').hidden = sel.value !== '0'; };
+    $('#dir-rec-badge').hidden = false;
+
+    $('#dir-step1').hidden = false;
+    $('#dir-step2').hidden = true;
+    $('#dir-sheet').hidden = false;
+}
+
+function chosen() {
+    return current.options[Number($('#dir-res').value)] || current.options[0];
+}
+
+function goToDedomil() {
+    const opt = chosen();
+    window.open(dedomilUrl(current.id, opt?.sid), '_blank', 'noopener');
+    const pending = { id: current.id, name: current.name, thumb: current.thumb, size: opt?.res, at: Date.now() };
+    try { sessionStorage.setItem('hellojar.pending', JSON.stringify(pending)); } catch {}
+    $('#dir-step1').hidden = true;
+    $('#dir-step2').hidden = false;
+}
+
+// the game the player went to download, if they left recently
+export function pendingDownload() {
+    try {
+        const p = JSON.parse(sessionStorage.getItem('hellojar.pending') || 'null');
+        return p && Date.now() - p.at < 60 * 60 * 1000 ? p : null;
+    } catch {
+        return null;
+    }
+}
+
+export function clearPending() {
+    try { sessionStorage.removeItem('hellojar.pending'); } catch {}
+}
+
+// ---------- boot ----------
+
+export async function initDirectory(opts) {
+    onPick = opts.onPick;
+
+    const doc = await load();
+    if (!doc) {
+        $('#dir-count').textContent = 'Katalog şu an yüklenemedi.';
+        return;
+    }
+    $('#dir-sub').textContent =
+        `${doc.games.length.toLocaleString('tr')} eski cep oyunu. Seç, dedomil'den indir, burada oyna.`;
+
+    let t;
+    $('#dir-q').addEventListener('input', () => { clearTimeout(t); t = setTimeout(applyFilters, 150); });
+    $('#dir-sort').addEventListener('change', applyFilters);
+    $('#dir-brands').addEventListener('click', e => {
+        const chip = e.target.closest('[data-brand]');
+        if (!chip) return;
+        brand = chip.dataset.brand;
+        for (const c of document.querySelectorAll('#dir-brands .chip')) {
+            c.setAttribute('aria-pressed', String(c === chip));
+        }
+        applyFilters();
+    });
+    $('#dir-grid').addEventListener('click', e => {
+        const c = e.target.closest('.dir-card');
+        if (c) openGame(Number(c.dataset.id));
+    });
+
+    new IntersectionObserver(entries => {
+        if (entries.some(e => e.isIntersecting) && shown < results.length) renderMore();
+    }, { rootMargin: '600px' }).observe($('#dir-more'));
+
+    $('#dir-go').addEventListener('click', goToDedomil);
+    $('#dir-again').addEventListener('click', () => {
+        const opt = chosen();
+        window.open(dedomilUrl(current.id, opt?.sid), '_blank', 'noopener');
+    });
+    $('#dir-pick').addEventListener('click', () => onPick(pendingDownload()));
+
+    applyFilters();
+}

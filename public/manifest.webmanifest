@@ -31,7 +31,7 @@
   "file_handlers": [
     {
       "action": "./",
-      "accept": { "application/java-archive": [".jar"] }
+      "accept": { "application/java-archive": [".jar"], "application/zip": [".zip"] }
     }
   ]
 }

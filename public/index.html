@@ -56,46 +56,36 @@
                 <div id="catalog" class="catalog"></div>
             </div>
 
-            <h2 class="section-title">Dedomil'de bul</h2>
-            <p class="section-sub">Binlerce eski oyun. İndirdiğin jar'ı buraya ekleyip oynarsın.</p>
+            <h2 class="section-title">Oyun kataloğu</h2>
+            <p class="section-sub" id="dir-sub">Binlerce eski cep oyunu. Seç, dedomil'den indir, burada oyna.</p>
 
-            <form id="search" class="search" autocomplete="off">
-                <input type="search" name="q" placeholder="Oyun adı, ör. Asphalt" maxlength="25" enterkeyhint="search" aria-label="Oyun adı">
-                <button class="btn primary" type="submit">Ara</button>
-            </form>
-
-            <div class="chips">
-                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/top/page/1">TOP 50</a>
-                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/latest">Yeni eklenenler</a>
-                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/category/1">Nokia</a>
-                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/category/2">Sony Ericsson</a>
-                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/category/4">Samsung</a>
-                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/category/3">Motorola</a>
-                <a class="chip" target="_blank" rel="noopener" href="http://dedomil.net/games/screens">Çözünürlükler</a>
+            <div class="dir-tools">
+                <input type="search" id="dir-q" placeholder="Oyun ara, ör. Asphalt" enterkeyhint="search" aria-label="Oyun ara" autocomplete="off">
+                <select id="dir-sort" aria-label="Sırala">
+                    <option value="pop">Popüler</option>
+                    <option value="new">Yeni</option>
+                    <option value="az">A-Z</option>
+                </select>
+            </div>
+            <div class="chips" id="dir-brands" role="group" aria-label="Marka">
+                <button class="chip" data-brand="" aria-pressed="true">Tümü</button>
+                <button class="chip" data-brand="1" aria-pressed="false">Nokia</button>
+                <button class="chip" data-brand="2" aria-pressed="false">Sony Ericsson</button>
+                <button class="chip" data-brand="4" aria-pressed="false">Samsung</button>
+                <button class="chip" data-brand="3" aria-pressed="false">Motorola</button>
+                <button class="chip" data-brand="8" aria-pressed="false">LG</button>
             </div>
 
-            <div id="recs-block" hidden>
-                <h3 class="section-title small">Öneriler</h3>
-                <p class="section-sub">Dedomil'de açılır; indirdikten sonra Kütüphanem'de <b>Oyun ekle</b>'ye dokun.</p>
-                <div id="recs" class="catalog"></div>
-            </div>
+            <p id="dir-count" class="muted small"></p>
+            <div id="dir-grid" class="dir-grid"></div>
+            <div id="dir-more" class="loading small" hidden><div class="spinner"></div></div>
+            <p id="dir-empty" class="muted" hidden>Sonuç yok. Başka bir isimle dene.</p>
 
-            <div class="tip">
-                <b>Hangi sürümü indirmeli?</b>
-                <span>Ekranın için en iyi görünen boyutlar: <span id="rec-sizes">240x320</span>. Aynı oyunun birden fazla sürümü varsa bunlardan birini seç.</span>
-            </div>
-
-            <h3 class="section-title small">Nasıl eklenir?</h3>
-            <ol class="steps">
-                <li><b>Bul ve indir.</b> Dedomil'de oyunun sayfasından <b>JAR</b> dosyasını indir (JAD değil).</li>
-                <li id="step-open"><b>hellojar'a ekle.</b> <span class="step-android">İndirme bitince dosyayı <b>Paylaş → hellojar</b> ile gönder ya da </span>Kütüphanem'de <b>Oyun ekle</b>'ye dokunup İndirilenler'den seç.</li>
-                <li><b>Oyna.</b> Ekran boyutu ve tuşlar otomatik ayarlanır; oyun kütüphanende kalır, kayıtların saklanır.</li>
-            </ol>
-            <p class="fineprint">hellojar oyun barındırmaz ve dedomil.net ile bağlantılı değildir; linkler dedomil'in kendi sayfalarını açar. Oyunlar cihazında kalır, hiçbir sunucuya yüklenmez.</p>
+            <p class="fineprint">Katalog <a href="http://dedomil.net/games" target="_blank" rel="noopener">dedomil.net</a>'in herkese açık listelerinden derlenir; hellojar oyun dosyası barındırmaz ve dedomil ile bağlantılı değildir. İndirme dedomil'in kendi sayfasında yapılır. Oyunlar cihazında kalır, hiçbir sunucuya yüklenmez.</p>
         </section>
     </main>
 
-    <input type="file" id="file-input" accept=".jar,application/java-archive,application/x-java-archive" hidden>
+    <input type="file" id="file-input" accept=".jar,.zip,application/java-archive,application/x-java-archive,application/zip" hidden>
 
     <div id="drop-hint" hidden><div>Jar dosyasını bırak</div></div>
 
@@ -132,6 +122,41 @@
                 <div class="row end">
                     <button class="btn" data-action="close-sheet">Vazgeç</button>
                     <button class="btn primary" id="add-confirm">Ekle ve oyna</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- directory game -->
+    <div class="sheet-backdrop" id="dir-sheet" hidden>
+        <div class="sheet" role="dialog" aria-labelledby="dir-title">
+            <div class="sheet-handle"></div>
+            <div class="game-head">
+                <img id="dir-thumb" alt="" class="thumb big">
+                <div>
+                    <h2 id="dir-title"></h2>
+                    <p id="dir-meta" class="muted"></p>
+                </div>
+            </div>
+
+            <div id="dir-step1">
+                <label class="field">
+                    <span>Sürüm (ekran boyutu) <em class="badge" id="dir-rec-badge">önerilen</em></span>
+                    <select id="dir-res"></select>
+                </label>
+                <button class="btn primary wide" id="dir-go">Dedomil'den indir</button>
+                <p class="muted small">Dedomil yeni sekmede açılır. Oradaki <b>JAR</b> (ya da <b>download</b>) linkine dokun, JAD değil. İndirme bitince buraya dön.</p>
+            </div>
+
+            <div id="dir-step2" hidden>
+                <ol class="steps compact">
+                    <li>Açılan dedomil sayfasında <b>JAR</b> ya da <b>download</b> linkine dokun.</li>
+                    <li>İndirme bitince buraya dön ve dosyayı seç.</li>
+                </ol>
+                <button class="btn primary wide" id="dir-pick">İndirdiğim dosyayı seç</button>
+                <div class="row between">
+                    <button class="btn ghost" id="dir-again">Sayfayı tekrar aç</button>
+                    <button class="btn ghost" data-action="close-sheet">Sonra</button>
                 </div>
             </div>
         </div>
@@ -183,6 +208,12 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div id="pending-bar" hidden>
+        <span><b id="pending-name"></b> indirildi mi?</span>
+        <button class="btn primary" id="pending-pick">Dosyayı seç</button>
+        <button class="icon-btn" id="pending-dismiss" aria-label="Kapat">✕</button>
     </div>
 
     <div id="toast" role="status" aria-live="polite" hidden></div>

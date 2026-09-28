@@ -1,7 +1,9 @@
 // Library / discover page.
 
 import { listGames, getGame, saveGame, updateGame, removeGame, loadCatalog } from "./store.js";
-import { SCREEN_SIZES, PHONE_TYPES, recommendedSizes } from "./detect.js";
+import { SCREEN_SIZES, PHONE_TYPES } from "./detect.js";
+import { initDirectory, pendingDownload, clearPending } from "./directory.js";
+import { unwrapJar } from "./zip.js";
 import {
     loadEmulator, analyseJar, install, readSettings, saveSettings,
     uninstall, wipeSaves, TOUCH_SIZES,
@@ -78,6 +80,7 @@ function showTab(name) {
     $('#tab-library').hidden = name !== 'library';
     $('#tab-discover').hidden = name !== 'discover';
     history.replaceState(null, '', name === 'discover' ? '#kesfet' : location.pathname + location.search);
+    if (name === 'discover') startDirectory();
 }
 
 // ---------- library ----------
@@ -122,9 +125,7 @@ function renderLibrary() {
 // ---------- discover ----------
 
 async function renderCatalog() {
-    const all = await loadCatalog();
-    const games = all.filter(g => !g.external);
-    renderRecommendations(all.filter(g => g.external));
+    const games = (await loadCatalog()).filter(g => !g.external);
 
     $('#catalog-block').hidden = games.length === 0;
     const list = $('#catalog');
@@ -168,54 +169,23 @@ async function renderCatalog() {
     }
 }
 
-// games we don't host: link to their page, the player adds the jar afterwards
-function renderRecommendations(games) {
-    $('#recs-block').hidden = games.length === 0;
-    const list = $('#recs');
-    list.innerHTML = '';
-
-    for (const g of games) {
-        const item = document.createElement('div');
-        item.className = 'catalog-item';
-        item.appendChild(iconEl(g, true));
-
-        const info = document.createElement('div');
-        info.className = 'info';
-        const h = document.createElement('h3');
-        h.textContent = g.name;
-        const meta = document.createElement('p');
-        meta.textContent = [g.genre, g.vendor, g.year].filter(Boolean).join(' · ');
-        const desc = document.createElement('p');
-        desc.className = 'desc';
-        desc.textContent = g.desc || '';
-        info.append(h, meta, desc);
-
-        const open = document.createElement('a');
-        open.className = 'btn';
-        open.href = g.external;
-        open.target = '_blank';
-        open.rel = 'noopener';
-        open.textContent = 'İndir';
-
-        item.append(info, open);
-        list.appendChild(item);
-    }
+let directoryStarted = false;
+function startDirectory() {
+    if (directoryStarted) return;
+    directoryStarted = true;
+    initDirectory({ onPick: hint => pickFile(hint) });
 }
 
-function initDiscover() {
-    $('#rec-sizes').textContent = recommendedSizes().join(', ');
-
-    if (!/android/i.test(navigator.userAgent)) {
-        document.querySelectorAll('.step-android').forEach(el => el.remove());
+// back from dedomil (possibly after the browser reloaded this tab)
+function showPendingBar() {
+    const p = pendingDownload();
+    const bar = $('#pending-bar');
+    if (!p || !$('#dir-sheet').hidden || !$('#add-sheet').hidden) {
+        bar.hidden = true;
+        return;
     }
-
-    $('#search').addEventListener('submit', e => {
-        e.preventDefault();
-        const q = e.target.q.value.trim();
-        if (!q) return;
-        // dedomil's own search form redirects to this URL
-        window.open('http://dedomil.net/games/search/' + encodeURIComponent(q) + '/page/1', '_blank', 'noopener');
-    });
+    $('#pending-name').textContent = p.name;
+    bar.hidden = false;
 }
 
 // ---------- sheets ----------
@@ -226,6 +196,7 @@ function openSheet(id) {
 
 function closeSheets() {
     document.querySelectorAll('.sheet-backdrop').forEach(el => { el.hidden = true; });
+    showPendingBar();
 }
 
 document.addEventListener('click', e => {
@@ -243,12 +214,14 @@ let busy = false;
 
 let pending = null;
 
-async function addFile(file) {
+// hint: the directory game the player went to download ({ id, name, thumb, size })
+async function addFile(file, hint = null) {
     if (busy) return;
     closeSheets();
+    $('#pending-bar').hidden = true;
 
     if (/\.jad$/i.test(file.name)) {
-        toast('Bu bir JAD dosyası. Oyunun kendisi olan .jar dosyasını seç.');
+        toast('Bu bir JAD dosyası. Oyunun kendisi olan .jar (ya da .zip) dosyasını seç.');
         return;
     }
 
@@ -263,9 +236,18 @@ async function addFile(file) {
         : 'Emülatör hazırlanıyor… (ilk seferde biraz sürebilir)';
 
     try {
-        const buffer = await file.arrayBuffer();
+        let buffer = await file.arrayBuffer();
+        let fileName = file.name;
         const magic = new Uint8Array(buffer, 0, Math.min(2, buffer.byteLength));
         if (magic[0] !== 0x50 || magic[1] !== 0x4b) { // "PK"
+            throw new Error('not-a-jar');
+        }
+        // some downloads come as a .zip with the .jar inside
+        const inner = await unwrapJar(buffer).catch(() => null);
+        if (inner) {
+            buffer = inner.buffer;
+            fileName = inner.name;
+        } else if (/\.zip$/i.test(fileName)) {
             throw new Error('not-a-jar');
         }
 
@@ -273,7 +255,16 @@ async function addFile(file) {
         emulatorReady = true;
         $('#add-loading-text').textContent = 'Oyun inceleniyor…';
 
-        pending = await analyseJar(buffer, file.name);
+        pending = await analyseJar(buffer, fileName);
+        if (hint) {
+            // the version they picked on dedomil, unless the jar itself says otherwise
+            if (!pending.sizeDetected && hint.size && SCREEN_SIZES.includes(hint.size)) {
+                pending.size = hint.size;
+                pending.sizeDetected = true;
+            }
+            if (!pending.icon && hint.thumb) pending.icon = hint.thumb;
+            pending.dedomilId = hint.id;
+        }
         showAddForm(pending);
     } catch (e) {
         console.error(e);
@@ -281,7 +272,7 @@ async function addFile(file) {
         const box = $('#add-error');
         box.hidden = false;
         box.textContent = e?.message === 'not-a-jar'
-            ? 'Bu dosya bir J2ME oyunu (.jar) değil ya da bozuk.'
+            ? 'Bu dosyada bir J2ME oyunu (.jar) bulunamadı ya da dosya bozuk. Symbian (.sis) oyunları çalışmaz.'
             : navigator.onLine === false
                 ? 'Emülatör yüklenemedi: internet bağlantısı gerekiyor.'
                 : 'Oyun okunamadı. Dosya bozuk olabilir ya da bu oyun desteklenmiyor olabilir.';
@@ -332,9 +323,11 @@ $('#add-confirm').addEventListener('click', async () => {
             size, phone,
             keypad: previous?.keypad || (TOUCH_SIZES.includes(size) ? 'none' : 'full'),
             fileName: pending.fileName,
+            dedomilId: pending.dedomilId || previous?.dedomilId || null,
             source: 'user',
             addedAt: previous?.addedAt || Date.now(),
         });
+        clearPending();
         location.href = playUrl(id);
     } catch (e) {
         console.error(e);
@@ -437,15 +430,19 @@ $('#manage-remove').addEventListener('click', async () => {
 
 // ---------- ways a file can arrive ----------
 
-function pickFile() {
+let pickHint = null;
+
+function pickFile(hint = null) {
     warmUpEmulator();
+    pickHint = hint;
     fileInput.value = '';
     fileInput.click();
 }
 
 fileInput.addEventListener('change', () => {
     const file = fileInput.files[0];
-    if (file) addFile(file);
+    if (file) addFile(file, pickHint);
+    pickHint = null;
 });
 
 // "Share → hellojar" on Android (installed app): sw.js stashes the file
@@ -499,6 +496,8 @@ document.addEventListener('click', e => {
     const tab = e.target.closest('[data-tab], [data-tab-link]');
     if (tab) showTab(tab.dataset.tab || tab.dataset.tabLink);
     if (e.target.closest('[data-action="add"]')) pickFile();
+    if (e.target.closest('#pending-pick')) pickFile(pendingDownload());
+    if (e.target.closest('#pending-dismiss')) { clearPending(); $('#pending-bar').hidden = true; }
 });
 document.addEventListener('pointerdown', e => {
     if (e.target.closest('[data-action="add"]')) warmUpEmulator();
@@ -508,11 +507,12 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 
-initDiscover();
 renderLibrary();
 renderCatalog();
 showTab(location.hash === '#kesfet' || listGames().length === 0 && !new URLSearchParams(location.search).has('shared') ? 'discover' : 'library');
 takeSharedFile();
+showPendingBar();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) showPendingBar(); });
 
 // coming back from a game (bfcache) should show fresh play order
 window.addEventListener('pageshow', e => { if (e.persisted) { renderLibrary(); renderCatalog(); } });

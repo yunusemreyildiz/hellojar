@@ -8,3 +8,7 @@ public/apps/lost.*
 
 # netlify cli state
 .netlify/
+
+# dedomil crawl cache (tools/crawl_dedomil.py)
+catalog/dedomil-cache/
+__pycache__/
