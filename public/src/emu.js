@@ -11,6 +11,11 @@ export const TOUCH_SIZES = ['360x640', '640x360', '480x800', '800x480', '240x400
 
 let libPromise = null;
 
+// the player boots CheerpJ itself (with its own natives); let it share that instance
+export function useEmulator(lib) {
+    libPromise = Promise.resolve(lib);
+}
+
 export function loadEmulator(natives = {}) {
     if (!libPromise) {
         libPromise = (async () => {

@@ -13,8 +13,9 @@ import jsReferenceNatives from "../libjs/libjsreference.js";
 import mediaBridgeNatives from "../libjs/libmediabridge.js";
 import midiBridgeNatives from "../libjs/libmidibridge.js";
 
-import { getGame, saveGame, updateGame, loadCatalog } from "./store.js";
-import { TOUCH_SIZES } from "./emu.js";
+import { getGame, saveGame, updateGame, removeGame, loadCatalog } from "./store.js";
+import { TOUCH_SIZES, useEmulator, analyseJar, install } from "./emu.js";
+import { unwrapJar } from "./zip.js";
 import { t, getLang, setLang, applyI18n } from "./i18n.js";
 
 const APP_ID = new URLSearchParams(location.search).get('app');
@@ -398,6 +399,27 @@ async function ensureAppInstalled(lib, entry) {
     return !!appFile;
 }
 
+async function reinstallFromArchive(lib) {
+    useEmulator(lib);
+    setStatus(t('add.fetching', { pct: '' }), 60);
+    const res = await fetch(game.archive);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    let buffer = await res.arrayBuffer();
+    let name = decodeURIComponent(game.archive.split('/').pop()).split('/').pop() || 'game.jar';
+    const inner = await unwrapJar(buffer).catch(() => null);
+    if (inner) ({ buffer, name } = inner);
+
+    setStatus(t('add.installing'), 66);
+    const pending = await analyseJar(buffer, name);
+    const id = await install(pending, { size: game.size || pending.size, phone: game.phone || pending.phone, mode: 'replace' });
+    if (id !== APP_ID) {
+        // same game, different id this time: move the library entry over
+        saveGame({ ...game, id });
+        removeGame(APP_ID);
+    }
+    return id;
+}
+
 function showGameInfo(info) {
     if (!info) return;
     document.title = info.name + ' · hellojar';
@@ -550,8 +572,17 @@ async function init() {
         showGameInfo(game);
     }
     if (!(await ensureAppInstalled(lib, entry))) {
-        fail(t('play.notInstalled'));
-        return;
+        // the browser dropped the installed copy (private tab, storage cleared…):
+        // games that came from archive.org can simply be fetched again
+        const newId = game?.archive ? await reinstallFromArchive(lib).catch(e => { console.error(e); return null; }) : null;
+        if (!newId) {
+            fail(t('play.notInstalled'));
+            return;
+        }
+        if (newId !== APP_ID) {
+            location.replace('play.html?app=' + encodeURIComponent(newId));
+            return;
+        }
     }
     updateGame(APP_ID, { playedAt: Date.now() });
 
