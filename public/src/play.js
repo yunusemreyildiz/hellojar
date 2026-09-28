@@ -125,7 +125,7 @@ function buzz() {
 
 function initKeypad() {
     const pad = document.getElementById('pad');
-    const active = new Map(); // pointerId -> key element
+    const active = new Map(); // touch identifier / pointer id -> key element
 
     const keyAt = (x, y) => document.elementFromPoint(x, y)?.closest('#pad .key');
 
@@ -139,46 +139,83 @@ function initKeypad() {
     function release(el, fire) {
         el.classList.remove('active');
         if (el.dataset.key) {
-            postKey(false, el.dataset.key);
+            // another finger may still hold the same key
+            if (![...active.values()].includes(el)) postKey(false, el.dataset.key);
         } else if (fire && el.dataset.action === 'menu') {
             openMenu();
         }
     }
+    function start(id, el) {
+        active.set(id, el);
+        press(el);
+    }
+    function move(id, x, y) {
+        const prev = active.get(id);
+        if (!prev) return;
+        const el = keyAt(x, y);
+        if (el === prev) return;
+        // slide to a neighbouring key (e.g. ← to ↑ on the navi key); never onto the menu
+        active.delete(id);
+        release(prev, false);
+        if (el && el.dataset.key) start(id, el);
+    }
+    function end(id, fire) {
+        const el = active.get(id);
+        if (!el) return;
+        active.delete(id);
+        release(el, fire);
+    }
+    // nothing is touching the pad any more: make sure no key is left held down
+    function releaseAll() {
+        for (const [id, el] of active) {
+            active.delete(id);
+            release(el, false);
+        }
+        for (const key of [...keyRepeatManager.keyStates.keys()]) postKey(false, key);
+        for (const el of pad.querySelectorAll('.key.active')) el.classList.remove('active');
+    }
 
+    // Touch screens: real touch events. iOS Safari doesn't reliably send
+    // pointerup for a touch whose pointer capture was released, which left
+    // keys stuck down (auto-repeating) and made games ignore later presses.
+    pad.addEventListener('touchstart', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) {
+            const el = keyAt(t.clientX, t.clientY);
+            if (el) start('t' + t.identifier, el);
+        }
+    }, { passive: false });
+    pad.addEventListener('touchmove', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) move('t' + t.identifier, t.clientX, t.clientY);
+    }, { passive: false });
+    const touchEnd = e => {
+        for (const t of e.changedTouches) end('t' + t.identifier, e.type === 'touchend');
+        if (e.touches.length === 0) releaseAll();
+    };
+    pad.addEventListener('touchend', touchEnd);
+    pad.addEventListener('touchcancel', touchEnd);
+
+    // Mouse / pen (desktop): pointer events. Touch pointers are handled above.
     pad.addEventListener('pointerdown', e => {
+        if (e.pointerType === 'touch') return;
         const el = e.target.closest('.key');
         if (!el) return;
         e.preventDefault();
-        // let the pointer slide across keys (e.g. rolling from ← to ↑ on the navi key)
-        if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId);
-        active.set(e.pointerId, el);
-        press(el);
+        start('p' + e.pointerId, el);
     });
-
     pad.addEventListener('pointermove', e => {
-        const prev = active.get(e.pointerId);
-        if (!prev) return;
-        const el = keyAt(e.clientX, e.clientY);
-        if (el === prev) return;
-        // don't let a slide open the menu or leave it pressed
-        release(prev, false);
-        if (el && el.dataset.key) {
-            active.set(e.pointerId, el);
-            press(el);
-        } else {
-            active.delete(e.pointerId);
-        }
+        if (e.pointerType !== 'touch') move('p' + e.pointerId, e.clientX, e.clientY);
     });
-
-    const end = e => {
-        const el = active.get(e.pointerId);
-        if (!el) return;
-        active.delete(e.pointerId);
-        release(el, e.type === 'pointerup');
+    const pointerEnd = e => {
+        if (e.pointerType !== 'touch') end('p' + e.pointerId, e.type === 'pointerup');
     };
-    // listen on window: once capture is released, pointerup may land anywhere
-    window.addEventListener('pointerup', end);
-    window.addEventListener('pointercancel', end);
+    window.addEventListener('pointerup', pointerEnd);
+    window.addEventListener('pointercancel', pointerEnd);
+
+    // leaving the page mid-press (notification, app switch) must not leave keys held
+    window.addEventListener('blur', releaseAll);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
 
     pad.addEventListener('contextmenu', e => e.preventDefault());
 }
@@ -535,8 +572,11 @@ function initDebugPanel() {
 
     const stats = { queued: 0, consumed: 0, lastKey: '-', frames: 0, errors: [] };
     const origQueue = evtQueue.queueEvent.bind(evtQueue);
+    stats.downs = 0; stats.ups = 0;
     evtQueue.queueEvent = (evt, skip) => {
         stats.queued++;
+        if (evt.kind === 'keydown') stats.downs++;
+        if (evt.kind === 'keyup') stats.ups++;
         if (evt.kind === 'keydown') stats.lastKey = evt.args[0] + (evtQueue.started ? '' : ' (DROPPED: listener not started)');
         return origQueue(evt, skip);
     };
@@ -564,6 +604,7 @@ function initDebugPanel() {
             `fps ${fps}  lag ${Math.round(lagMax)}ms`,
             `listener ${evtQueue.started ? 'started' : 'NOT started'}  queue ${evtQueue.queue.length}`,
             `events in ${stats.queued} / out ${stats.consumed}  last key ${stats.lastKey}`,
+            `down ${stats.downs} up ${stats.ups}  held [${[...keyRepeatManager.keyStates.keys()].join(' ')}]`,
             `audio ${window.libmidi?.context?.state || '-'}  canvas ${display.width}x${display.height}`,
             `${navigator.userAgent.replace(/^Mozilla\/5\.0 /, '').slice(0, 90)}`,
             ...stats.errors.map(e => '! ' + e),
