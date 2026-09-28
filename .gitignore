@@ -12,3 +12,6 @@ public/apps/lost.*
 # dedomil crawl cache (tools/crawl_dedomil.py)
 catalog/dedomil-cache/
 __pycache__/
+
+# local tooling
+.claude/
