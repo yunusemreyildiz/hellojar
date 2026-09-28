@@ -1,4 +1,4 @@
-// Only job: receive jars shared to the installed app ("Share → Tuşlu" on
+// Only job: receive jars shared to the installed app ("Share → hellojar" on
 // Android, manifest share_target). The file is parked in Cache Storage and the
 // library page picks it up from ?shared=1. Everything else goes to the network.
 

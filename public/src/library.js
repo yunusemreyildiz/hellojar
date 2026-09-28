@@ -448,7 +448,7 @@ fileInput.addEventListener('change', () => {
     if (file) addFile(file);
 });
 
-// "Share → Tuşlu" on Android (installed app): sw.js stashes the file
+// "Share → hellojar" on Android (installed app): sw.js stashes the file
 async function takeSharedFile() {
     const params = new URLSearchParams(location.search);
     if (!params.has('shared')) return;

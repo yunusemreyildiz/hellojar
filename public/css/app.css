@@ -7,6 +7,7 @@
     --text: #e7e9ec;
     --muted: #8b939e;
     --accent: #e0a040;
+    --hello: #5ec8e5;
     --accent-ink: #1a1206;
     --danger: #e0645a;
     --radius: 14px;
@@ -48,6 +49,9 @@ a { color: var(--accent); }
 }
 .brand-icon { width: 44px; height: 44px; border-radius: 11px; }
 .top h1 { margin: 0; font-size: 22px; letter-spacing: .01em; }
+.wordmark { font-size: 26px !important; font-weight: 800; letter-spacing: -.02em !important; line-height: 1.1; }
+.w-hello { color: var(--hello); }
+.w-jar { color: var(--accent); }
 .top p { margin: 0; color: var(--muted); font-size: 13px; }
 
 .tabs {

@@ -1,6 +1,6 @@
 {
-  "name": "Tuşlu — eski cep oyunları",
-  "short_name": "Tuşlu",
+  "name": "hellojar — eski cep oyunları",
+  "short_name": "hellojar",
   "description": "Eski tuşlu telefon (J2ME) oyunlarını tarayıcında oyna.",
   "id": "./",
   "start_url": "./",

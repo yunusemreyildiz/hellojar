@@ -1,4 +1,4 @@
-# Tuşlu — eski cep oyunları, tarayıcında
+# hellojar — eski cep oyunları, tarayıcında
 
 Eski tuşlu telefonların J2ME (Java ME) oyunlarını mobil tarayıcıda oynatan bir
 platform. Emülatör: [freej2me-web](https://github.com/zb3/freej2me-web)
@@ -11,7 +11,7 @@ platform. Emülatör: [freej2me-web](https://github.com/zb3/freej2me-web)
   Dedomil araması ve kategorileri dedomil'in kendi sayfalarını açar.
 - **Oynatıcı:** N80 tarzı 5 yönlü tuş, seçim tuşları, sayı tuşları; yatay/dikey
   düzen, tam ekran, titreşim, dokunmatik oyunlar için tuşsuz mod.
-- **Android:** Ana ekrana eklenince indirilen jar'lar *Paylaş → Tuşlu* ile
+- **Android:** Ana ekrana eklenince indirilen jar'lar *Paylaş → hellojar* ile
   açılabilir (Web Share Target).
 
 ## Çalıştırma
@@ -31,7 +31,7 @@ Telefondan denemek için aynı ağda `http://<bilgisayar-ip>:8080` adresini aç�
 | `public/play.html`, `src/play.js`, `css/play.css` | Oynatıcı (`play.html?app=<id>`) |
 | `public/src/emu.js` | Jar inceleme/kurma/ayar (CheerpJ'deki Java tarafı) |
 | `public/src/detect.js` | Dosya adından ekran boyutu ve telefon tipi tahmini |
-| `public/sw.js`, `manifest.webmanifest` | PWA, "Paylaş → Tuşlu" |
+| `public/sw.js`, `manifest.webmanifest` | PWA, "Paylaş → hellojar" |
 | `public/freej2me-web.jar`, `libjs/`, `libmidi/`, `libmedia/`, `src/key.js`, `src/eventqueue.js` | freej2me-web (GPL-3, bkz. `LICENSE-freej2me`) |
 | `emulator/` | freej2me-web'e yaptığımız değişiklikler (aşağıda) |
 | `catalog/games.json`, `catalog/free/` | Katalog oyunları ve lisansları |
@@ -72,5 +72,5 @@ GitHub Pages destekler). HTTPS önerilir (PWA, paylaş hedefi, tam ekran).
 - CheerpJ çalışma zamanı `cjrtnc.leaningtech.com`'dan yüklenir: internet gerekir.
   CheerpJ kişisel/ticari olmayan kullanımda ücretsizdir.
 - Her oyun çalışmaz: 3D (M3G/Mascot) ve bazı üreticiye özel API'ler sorun çıkarabilir.
-- Tuşlu oyun barındırmaz (GPL katalog hariç) ve dedomil.net ile bağlantılı değildir.
+- hellojar oyun barındırmaz (GPL katalog hariç) ve dedomil.net ile bağlantılı değildir.
 - iPhone'da sessiz modu anahtarı açıksa Web Audio sesi çalmaz.

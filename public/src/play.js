@@ -352,7 +352,7 @@ async function ensureAppInstalled(lib, entry) {
 
 function showGameInfo(info) {
     if (!info) return;
-    document.title = info.name + ' · Tuşlu';
+    document.title = info.name + ' · hellojar';
     document.getElementById('loader-name').textContent = info.name;
     const sub = [info.vendor, info.year, info.size].filter(Boolean).join(' · ');
     document.getElementById('loader-sub').textContent = sub || '\u00a0';
