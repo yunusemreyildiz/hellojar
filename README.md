@@ -38,6 +38,7 @@ Remember **Snake II**, **Asphalt**, **LOST** on a Nokia with a D-pad? **hellojar
 - **🔎 A catalog of 5,800+ games.** Search in Turkish or English without worrying about accents, filter by brand, and sort by popularity, date or name. Games not on the archive open dedomil's download page for the resolution that suits your screen; the downloaded file comes straight back into your library.
 - **▶ One-tap games.** A handful of GPL-licensed titles (Abo, MilCity, Reversi) ship with the site and start instantly.
 - **⚡ Fixes old games that would otherwise freeze the page.** Many J2ME games busy-wait or spin in `while (true)` loops. That was fine on a phone, but it freezes a browser tab. hellojar patches their bytecode as they load (see [below](#how-it-works)).
+- **💾 Saves you can keep.** Game saves (RMS) stay on the device, and the site asks the browser for persistent storage. One tap downloads a backup of every game and save to keep in Files or iCloud, and restoring it on another phone carries your progress over.
 - **🌍 Türkçe / English.** Switch from the top-right corner or the in-game menu; your choice is remembered.
 - **📲 Installable.** Add it to your home screen and it runs full screen. On Android, *Share → hellojar* opens a downloaded jar directly.
 

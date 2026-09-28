@@ -8,6 +8,7 @@ import { t, tHtml, localized, applyI18n, initLangSwitch } from "./i18n.js";
 import {
     loadEmulator, analyseJar, install, readSettings, saveSettings,
     uninstall, wipeSaves, TOUCH_SIZES,
+    exportBackup, importBackup, requestPersistence,
 } from "./emu.js";
 
 const $ = sel => document.querySelector(sel);
@@ -92,6 +93,8 @@ function renderLibrary() {
 
     const games = listGames();
     $('#empty').hidden = games.length > 0;
+    $('#saves').hidden = games.length === 0;
+    if (games.length) updateSaveStatus();
     container.hidden = games.length === 0;
 
     for (const game of games) {
@@ -346,6 +349,7 @@ function libraryEntry(id, p, size, phone, previous) {
 
 // installs `pending` and opens the game; throws on failure
 async function finishInstall({ size, phone, mode }) {
+    requestPersistence();
     const id = await install(pending, { size, phone, mode });
     saveGame(libraryEntry(id, pending, size, phone, getGame(id)));
     clearPending();
@@ -522,6 +526,73 @@ $('#manage-remove').addEventListener('click', async () => {
         toast(t('manage.removed'));
     } catch {
         toast(t('manage.removeFailed'));
+    } finally {
+        busy = false;
+    }
+});
+
+// ---------- backups ----------
+
+async function updateSaveStatus() {
+    const el = $('#saves-status');
+    try {
+        const persistent = await navigator.storage?.persisted?.();
+        el.textContent = persistent ? t('saves.persistent') : t('saves.notPersistent');
+        el.classList.toggle('ok', !!persistent);
+    } catch {
+        el.textContent = '';
+    }
+}
+
+$('#backup-export').addEventListener('click', async () => {
+    if (busy) return;
+    busy = true;
+    toast(t('saves.exporting'), 20000);
+    try {
+        const bytes = await exportBackup(JSON.stringify(listGames()));
+        const url = URL.createObjectURL(new Blob([bytes], { type: 'application/zip' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hellojar-backup-${new Date().toISOString().slice(0, 10)}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        toast(t('saves.exported'));
+    } catch (e) {
+        console.error(e);
+        toast(t('manage.saveFailed'));
+    } finally {
+        busy = false;
+    }
+});
+
+$('#backup-import').addEventListener('click', () => {
+    const input = $('#backup-file');
+    input.value = '';
+    input.click();
+    warmUpEmulator();
+});
+
+$('#backup-file').addEventListener('change', async () => {
+    const file = $('#backup-file').files[0];
+    if (!file || busy) return;
+    if (!confirm(t('saves.importConfirm'))) return;
+    busy = true;
+    try {
+        const buffer = await file.arrayBuffer();
+        const magic = new Uint8Array(buffer, 0, 2);
+        if (magic[0] !== 0x50 || magic[1] !== 0x4b) throw new Error('not a zip');
+        const games = await importBackup(buffer);
+        if (!Array.isArray(games)) throw new Error('no library in backup');
+        for (const g of games) if (g && g.id) saveGame(g);
+        requestPersistence();
+        renderLibrary();
+        showTab('library');
+        toast(t('saves.imported', { count: games.length }));
+    } catch (e) {
+        console.error(e);
+        toast(t('saves.importFailed'));
     } finally {
         busy = false;
     }

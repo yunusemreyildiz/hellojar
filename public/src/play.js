@@ -14,7 +14,7 @@ import mediaBridgeNatives from "../libjs/libmediabridge.js";
 import midiBridgeNatives from "../libjs/libmidibridge.js";
 
 import { getGame, saveGame, updateGame, removeGame, loadCatalog } from "./store.js";
-import { TOUCH_SIZES, useEmulator, analyseJar, install } from "./emu.js";
+import { TOUCH_SIZES, useEmulator, analyseJar, install, requestPersistence } from "./emu.js";
 import { unwrapJar, guessPhoneFromJar } from "./zip.js";
 import { t, getLang, setLang, applyI18n } from "./i18n.js";
 
@@ -673,6 +673,7 @@ async function init() {
     }
     if (await fixPhoneType(lib)) return;
     updateGame(APP_ID, { playedAt: Date.now() });
+    requestPersistence();
 
     setStatus(t('play.opening'), 72);
     FreeJ2ME.main(['app', APP_ID]).catch(e => {

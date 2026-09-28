@@ -186,3 +186,44 @@ export async function wipeSaves(appId) {
 export async function installBundle(appId) {
     await (await launcher()).installFromBundle(cheerpjWebRoot + "/apps/", appId);
 }
+
+// ---------- backups ----------
+// A backup is a zip of the emulator's whole file system (games, settings and
+// the games' own save data under <id>/rms/), plus our library list.
+
+const BACKUP_META = '_hellojar';
+
+export async function exportBackup(libraryJson) {
+    const lib = await loadEmulator();
+    const launcherUtil = await lib.pl.zb3.freej2me.launcher.LauncherUtil;
+    // saveApp creates the folder; the library list rides along as its meta.json
+    await launcherUtil.saveApp(BACKUP_META, null, null, null);
+    await launcherUtil.writeMetaJsonFile(BACKUP_META, libraryJson);
+    const bytes = await launcherUtil.exportData();
+    return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength).slice();
+}
+
+// Merges a backup into this device (games not in the backup are kept) and
+// returns the library list stored in it, if any.
+export async function importBackup(buffer) {
+    const lib = await loadEmulator();
+    const FilesUtil = await lib.pl.zb3.freej2me.launcher.FilesUtil;
+    await FilesUtil.unzipToCurrentDirectory(new Int8Array(buffer));
+    const meta = await cjFileBlob('/files/' + BACKUP_META + '/meta.json');
+    try {
+        return meta ? JSON.parse(await meta.text()) : null;
+    } catch {
+        return null;
+    }
+}
+
+// Ask the browser not to clear our storage on its own (quota pressure, Safari's
+// 7-day rule for sites not on the home screen). Returns whether it's persistent.
+export async function requestPersistence() {
+    try {
+        if (!navigator.storage?.persist) return false;
+        return (await navigator.storage.persisted()) || (await navigator.storage.persist());
+    } catch {
+        return false;
+    }
+}

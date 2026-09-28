@@ -192,6 +192,19 @@ a { color: var(--accent); }
     font-size: 20px;
 }
 
+.saves {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+}
+.saves h3 { margin: 0 0 4px; font-size: 15px; }
+.saves p { margin: 0 0 10px; }
+.row.start { justify-content: flex-start; }
+#saves-status:empty { display: none; }
+#saves-status.ok { color: #7bd88f; }
+
 .empty {
     margin-top: 18px;
     padding: 20px;

@@ -37,6 +37,7 @@ Nokia'da yön tuşuyla oynadığın **Yılan**, **Asphalt**, **LOST**'u hatırl�
 - **🔎 5.800+ oyunluk katalog.** Türkçe karakterler fark etmeden arama, marka filtresi, popülerlik/tarih/isim sıralaması var. Arşivde olmayan oyunlarda hellojar, ekranına en uygun çözünürlüğün dedomil indirme sayfasını açıyor; indirdiğin dosya doğrudan kütüphanene ekleniyor.
 - **▶ Tek dokunuşla oyunlar.** GPL lisanslı birkaç oyun (Abo, MilCity, Reversi) sitenin içinde geliyor, anında açılıyor.
 - **⚡ Donmayı önleyen yama.** Pek çok J2ME oyunu meşgul bekleme yapıyor ya da `while (true)` döngülerinde dönüyor. Telefonda sorun değildi, ama tarayıcı sekmesini donduruyor. hellojar bu oyunların kodunu yüklenirken yamalıyor ([aşağıda](#nasıl-çalışıyor)).
+- **💾 Kayıtların güvende.** Oyun kayıtları (RMS) cihazda saklanır, site tarayıcıdan kalıcı depolama ister. Tek dokunuşla tüm oyunların ve kayıtların yedeğini indirip Dosyalar'da ya da iCloud'da tutabilir, başka bir telefona geri yükleyerek ilerlemeni taşıyabilirsin.
 - **🌍 Türkçe / English.** Sağ üstten ya da oyun menüsünden dil değiştirilebiliyor; seçim hatırlanıyor.
 - **📲 Uygulama gibi.** Ana ekrana eklenince tam ekran açılıyor. Android'de indirilen jar, *Paylaş → hellojar* ile doğrudan açılıyor.
 

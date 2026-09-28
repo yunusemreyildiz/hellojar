@@ -43,6 +43,17 @@
                 </button>
             </div>
 
+            <section id="saves" class="saves" hidden>
+                <h3 data-i18n="saves.title">Kayıtların</h3>
+                <p class="muted small" data-i18n="saves.text">Oyun ilerlemen bu cihazın tarayıcısında saklanır. Gizli sekmede ya da tarayıcı verisini silersen kaybolur. Yedeğini alıp Dosyalar'da veya iCloud'da tutabilir, başka bir telefona geri yükleyebilirsin.</p>
+                <p class="muted small" id="saves-status"></p>
+                <div class="row start">
+                    <button class="btn" id="backup-export" data-i18n="saves.export">Yedek indir</button>
+                    <button class="btn ghost" id="backup-import" data-i18n="saves.import">Yedeği geri yükle</button>
+                </div>
+                <input type="file" id="backup-file" accept=".zip,application/zip" hidden>
+            </section>
+
             <div id="empty" class="empty" hidden>
                 <h2 data-i18n="lib.emptyTitle">Kütüphanen boş</h2>
                 <p data-i18n-html="lib.emptyText">Telefonuna indirdiğin bir <b>.jar</b> oyununu ekle ya da Keşfet'ten hazır bir oyunla başla.</p>
