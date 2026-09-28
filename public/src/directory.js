@@ -73,9 +73,14 @@ function applyFilters() {
         (!brand || (g[5] & (1 << Number(brand)))) &&
         words.every(w => g[8].includes(w)));
 
-    if (sort === 'new') results.sort((a, b) => (b[4] > a[4] ? 1 : b[4] < a[4] ? -1 : 0));
+    if (sort === 'pop') {
+        // our picks first, in the order listed
+        const featured = data.featured || [];
+        const rank = g => { const i = featured.indexOf(g[0]); return i === -1 ? featured.length : i; };
+        results.sort((a, b) => rank(a) - rank(b));
+    } else if (sort === 'new') results.sort((a, b) => (b[4] > a[4] ? 1 : b[4] < a[4] ? -1 : 0));
     else if (sort === 'az') results.sort((a, b) => a[1].localeCompare(b[1], 'tr'));
-    // "pop" is the file's own order
+    // otherwise "pop" is the file's own order (most downloaded first)
 
     shown = 0;
     $('#dir-grid').innerHTML = '';
@@ -102,6 +107,15 @@ function card(g) {
         ph.className = 'ph';
         ph.textContent = g[1].charAt(0).toUpperCase();
         el.appendChild(ph);
+    }
+
+    if (data.featured?.includes(g[0])) {
+        el.classList.add('featured');
+        const star = document.createElement('span');
+        star.className = 'star';
+        star.textContent = '★';
+        star.title = 'Öne çıkan';
+        el.appendChild(star);
     }
 
     const name = document.createElement('span');

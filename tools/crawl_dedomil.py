@@ -245,8 +245,11 @@ def build(games, details):
         ])
     rows.sort(key=lambda r: -r[3])
     OUT.mkdir(parents=True, exist_ok=True)
+    featured_path = ROOT / "catalog" / "dedomil-featured.json"
+    featured = json.loads(featured_path.read_text()).get("featured", []) if featured_path.exists() else []
     doc = {
         "source": "dedomil.net",
+        "featured": [i for i in featured if any(r[0] == i for r in rows)],
         "updated": time.strftime("%Y-%m-%d"),
         "fields": ["id", "name", "vendor", "downloads", "added", "brands", "resolutions", "thumb"],
         "brands": {str(k): v for k, v in CATEGORIES.items()},
